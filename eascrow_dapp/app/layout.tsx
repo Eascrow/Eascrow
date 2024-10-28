@@ -16,7 +16,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body className={cn('min-h-screen font-sans antialiased bg-waves')}>
+      <body className={cn('h-screen font-sans antialiased bg-waves')}>
         <Layout>{children}</Layout>
       </body>
     </html>
