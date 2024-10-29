@@ -86,9 +86,165 @@ const Overview = () => {
           </div>
           <TableComponent />
         </Card>
-        {/* <Card className="w-[464px] h-[300px] mr-7 mb-7">card</Card> */}
-        {/* <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card> */}
-        {/* <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card> */}
+        <Card className="w-[464px] h-[300px] mr-7 mb-7 ">
+          <div className="flex justify-between">
+            <div className="flex items-center space-x-2.5 mb-5">
+              <Image
+                src="/icons/xlm.png"
+                alt="Eascrow website"
+                width="36"
+                height="36"
+                priority
+              />
+              <h3 className="text-2xl text-white font-bold">$XLM</h3>
+            </div>
+            <div>
+              <Link href="/chart">
+                <Button className="w-full bg-mintGreen text-background text-sm font-bold">
+                  See more
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <div className="w-[419px] h-[198px] ">
+            <Image
+              src="/images/xlm-graph.png"
+              alt="Eascrow website"
+              width={419}
+              height={198}
+              priority
+            />
+          </div>
+        </Card>
+        <Card className="w-[252px] h-[300px] mr-7 mb-7 overflow-scroll overflow-x-hidden">
+          <div className="flex justify-between">
+            <div className="flex items-center space-x-2.5 mb-5">
+              <Image
+                src="/icons/bell-green.png"
+                alt="Eascrow website"
+                width="36"
+                height="36"
+                priority
+              />
+              <h3 className="text-2xl text-white font-bold">Notifications</h3>
+            </div>
+          </div>
+          <div>
+            <ul className="space-y-6">
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    New request
+                  </div>
+                  <div className="text-xs">12/08/2024</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    New payment
+                  </div>
+                  <div className="text-xs">12/08/2024</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    Action required
+                  </div>
+                  <div className="text-xs">09/08/2024</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    New request
+                  </div>
+                  <div className="text-xs">27/07/2024</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    New request
+                  </div>
+                  <div className="text-xs">13/06/2024</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+              <li className="flex justify-between items-center">
+                <div>
+                  <div className="text-sm text-white font-bold">
+                    New request
+                  </div>
+                  <div className="text-xs">09/12/1988</div>
+                </div>
+                <div>
+                  <Link href="/" className="text-xs text-white">
+                    See
+                  </Link>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </Card>
+        <Card className="w-[252px] h-[300px] mr-7 mb-7">
+          <div className="flex justify-between">
+            <div className="flex items-center space-x-2.5 mb-5">
+              <Image
+                src="/icons/help-green.png"
+                alt="Eascrow website"
+                width="36"
+                height="36"
+                priority
+              />
+              <h3 className="text-2xl text-white font-bold">Need help?</h3>
+            </div>
+          </div>
+          <div className="mb-4">
+            <p className="text-[#7C7C8D]">
+              Check out the FAQ section or contact us
+            </p>
+          </div>
+          <textarea
+            name=""
+            id=""
+            className="w-full h-[117px] py-2 px-4 bg-[rgba(52,69,92,0.25)] text-xs border border-[#2C303D] rounded-lg"
+            placeholder="message"
+          ></textarea>
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              className="h-[30px] bg-mintGreen text-background text-sm font-bold"
+            >
+              Send
+            </Button>
+          </div>
+        </Card>
       </section>
     </div>
   );
