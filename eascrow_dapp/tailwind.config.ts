@@ -61,7 +61,7 @@ const config: Config = {
       backgroundImage: {
         waves: "url('/background.png')",
         'custom-gradient':
-          'linear-gradient(90deg, rgba(92, 255, 184, 0.3) 0%, rgba(16, 22, 54, 0.3) 100%)',
+          'linear-gradient(90deg, rgba(92, 255, 184, 0.5) 0%, rgba(16, 22, 54, 0.5) 100%)',
       },
     },
   },

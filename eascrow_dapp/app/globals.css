@@ -67,7 +67,10 @@
   }
 }
 
-h1 {
+h1,
+h2,
+h3,
+button {
   font-family: 'Onest', sans-serif;
 }
 p {
