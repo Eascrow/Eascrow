@@ -6,7 +6,7 @@ type Props = {};
 
 const Sidebar = (props: Props) => {
   return (
-    <div className="border w-[248px] min-h-screen py-[30px] px-[24px] bg-background flex flex-col justify-between">
+    <div className=" w-[248px] min-h-screen py-[30px] px-[24px] bg-background flex flex-col justify-between">
       <div className=" w-[174px] h-[243px] flex flex-col justify-between">
         <Link href="/">
           <Image
