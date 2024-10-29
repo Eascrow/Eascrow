@@ -79,3 +79,13 @@ p {
 li {
   font-size: 14px;
 }
+
+tr {
+  border-color: #2c303d;
+  height: 60px;
+  color: white;
+}
+
+td a {
+  text-decoration: underline;
+}

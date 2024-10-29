@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/shared/Card';
+import TableComponent from '@/components/shared/TableComponent';
 
 const Overview = () => {
   return (
@@ -63,10 +64,31 @@ const Overview = () => {
             </Link>
           </div>
         </Card>
-        {/* <Card className="w-[763px] h-[300px] mr-7 mb-7">card</Card>
-        <Card className="w-[464px] h-[300px] mr-7 mb-7">card</Card>
-        <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card>
-        <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card> */}
+        <Card className="w-[763px] h-[300px] mr-7 mb-7 overflow-scroll overflow-x-hidden">
+          <div className="flex justify-between">
+            <div className="flex items-center space-x-2.5 mb-5">
+              <Image
+                src="/icons/arrow-swapp-green.png"
+                alt="Eascrow website"
+                width="36"
+                height="36"
+                priority
+              />
+              <h3 className="text-2xl text-white font-bold">Transactions</h3>
+            </div>
+            <div>
+              <Link href="/transactions">
+                <Button className="w-full bg-mintGreen text-background text-sm font-bold">
+                  See more
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <TableComponent />
+        </Card>
+        {/* <Card className="w-[464px] h-[300px] mr-7 mb-7">card</Card> */}
+        {/* <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card> */}
+        {/* <Card className="w-[252px] h-[300px] mr-7 mb-7">card</Card> */}
       </section>
     </div>
   );
