@@ -86,7 +86,7 @@ export default function SmartContractUI() {
 
   const handleReleaseFunds = async () => {
     try {
-      const contractParams: xdr.ScVal[] = [];
+      const contractParams = [];
 
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
