@@ -39,8 +39,7 @@ fn test() {
     token_admin_client.mint(&buyer, &100);
     std::println!("buyer balance : {:#?}", token_client.balance(&buyer));
 
-    client.initialize(&buyer, &seller, &token_client.address, &25);
-
+    client.initialize(&buyer, &seller, &token_client.address, &token_admin, &25);
 
     std::println!("\nFunding phase");
     client.fund(&buyer, &10);
