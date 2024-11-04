@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://eascrow.xyz/sitemap.xml

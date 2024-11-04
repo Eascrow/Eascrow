@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Onest'; /* Define a name for your font */
+  src: url('/fonts/Onest.ttf') format('truetype'); /* Path to your .ttf file */
+  font-weight: normal; /* Specify the font weight */
+  font-style: normal; /* Specify the font style */
+}
+
+@font-face {
+  font-family: 'Sora'; /* Define a name for your font */
+  src: url('/fonts/Sora.ttf') format('truetype'); /* Path to your .ttf file */
+  font-weight: normal; /* Specify the font weight */
+  font-style: normal; /* Specify the font style */
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -66,4 +80,21 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Onest', sans-serif;
+}
+
+p,
+a,
+button {
+  font-family: 'Sora', sans-serif;
 }
