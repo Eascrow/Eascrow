@@ -1,11 +1,23 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import Card from '@/components/shared/Card';
 import TableComponent from '@/components/shared/TableComponent';
+import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 
 const Overview = () => {
+  const { publicKey } = useFreighterWallet();
+  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
+    !!publicKey
+  );
+
+  // Track changes in `publicKey` and update `isWalletConnected`
+  useEffect(() => {
+    setIsWalletConnected(!!publicKey);
+  }, [publicKey]);
+
   return (
     <div className="pt-[70px] pb-5 px-9">
       <section className="flex items-center justify-between mb-16">
@@ -14,8 +26,14 @@ const Overview = () => {
           <h3 className="text-3xl text-mintGreen">Service Account</h3>
         </div>
         <div className="">
-          <Link href="/createEascrow" className="">
-            <Button className="w-[195px] h-[60px] px-6 py-7 text-xl font-bold rounded-lg bg-custom-gradient hover:opacity-90 border border-[#34455C] ">
+          <Link
+            href={isWalletConnected ? '/createEascrow' : '#'}
+            className={isWalletConnected ? '' : 'pointer-events-none'}
+          >
+            <Button
+              className="w-[195px] h-[60px] px-6 py-7 text-xl font-bold rounded-lg bg-custom-gradient hover:opacity-90 border border-[#34455C]"
+              disabled={!isWalletConnected}
+            >
               Initiate Eascrow
             </Button>
           </Link>
