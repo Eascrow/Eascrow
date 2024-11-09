@@ -10,7 +10,7 @@ const Overview = () => {
     <div className="pt-[70px] pb-5 px-9">
       <section className="flex items-center justify-between mb-16">
         <div>
-          <h2 className="text-6xl text-white font-bold">Welcome [name]</h2>
+          <h2 className="text-6xl text-white font-bold">Welcome to Eascrow</h2>
           <h3 className="text-3xl text-mintGreen">Service Account</h3>
         </div>
         <div className="">
