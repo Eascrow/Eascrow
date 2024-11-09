@@ -18,14 +18,6 @@ const Footer: React.FC<FooterProps> = ({ children }) => {
         />
       </Link>
       <div className="min-h-20 flex flex-col sm:flex-row justify-between items-center sm:space-x-4">
-        <Link href="https://x.com/eascrowapp" target="_blank">
-          <Image
-            src="/x-logo.svg"
-            alt="Eascrow X page"
-            width="30"
-            height="30"
-          />
-        </Link>
         <Link href="https://www.linkedin.com/company/eascrow/" target="_blank">
           <Image
             src="/linkedin-logo.webp"
