@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Card from '@/components/shared/Card';
 import TableComponent from '@/components/shared/TableComponent';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Overview = () => {
   const { publicKey } = useFreighterWallet();
@@ -25,7 +26,7 @@ const Overview = () => {
           <h2 className="text-6xl text-white font-bold">Welcome to Eascrow</h2>
           <h3 className="text-3xl text-mintGreen">Service Account</h3>
         </div>
-        <div className="">
+        <div className="flex flex-col">
           <Link
             href={isWalletConnected ? '/createEascrow' : '#'}
             className={isWalletConnected ? '' : 'pointer-events-none'}
@@ -37,6 +38,9 @@ const Overview = () => {
               Initiate Eascrow
             </Button>
           </Link>
+          {!isWalletConnected && (
+            <span className="ml-2 text-xs">Please connect wallet</span>
+          )}
         </div>
       </section>
       <section className="flex flex-wrap max-w-[1080px]">
@@ -82,7 +86,7 @@ const Overview = () => {
             </Link>
           </div>
         </Card>
-        <Card className="w-[763px] h-[300px] mr-7 mb-7 overflow-scroll overflow-x-hidden">
+        <Card className="w-[763px] h-[300px] mr-7 mb-7 overflow-hidden">
           <div className="flex justify-between">
             <div className="flex items-center space-x-2.5 mb-5">
               <Image
@@ -134,7 +138,7 @@ const Overview = () => {
             />
           </div>
         </Card>
-        <Card className="w-[252px] h-[300px] mr-7 mb-7 overflow-scroll overflow-x-hidden">
+        <Card className="w-[252px] h-[300px] mr-7 mb-7 overflow-hidden">
           <div className="flex justify-between">
             <div className="flex items-center space-x-2.5 mb-5">
               <Image
@@ -147,88 +151,90 @@ const Overview = () => {
               <h3 className="text-2xl text-white font-bold">Notifications</h3>
             </div>
           </div>
-          <div>
-            <ul className="space-y-6">
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    New request
+          <ScrollArea className="h-full w-full" type="always">
+            <div>
+              <ul className="space-y-6">
+                <li className="w-11/12 w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      New request
+                    </div>
+                    <div className="text-xs">12/08/2024</div>
                   </div>
-                  <div className="text-xs">12/08/2024</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    New payment
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
                   </div>
-                  <div className="text-xs">12/08/2024</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    Action required
+                </li>
+                <li className="w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      New payment
+                    </div>
+                    <div className="text-xs">12/08/2024</div>
                   </div>
-                  <div className="text-xs">09/08/2024</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    New request
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
                   </div>
-                  <div className="text-xs">27/07/2024</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    New request
+                </li>
+                <li className="w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      Action required
+                    </div>
+                    <div className="text-xs">09/08/2024</div>
                   </div>
-                  <div className="text-xs">13/06/2024</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-              <li className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-white font-bold">
-                    New request
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
                   </div>
-                  <div className="text-xs">09/12/1988</div>
-                </div>
-                <div>
-                  <Link href="/" className="text-xs text-white">
-                    See
-                  </Link>
-                </div>
-              </li>
-            </ul>
-          </div>
+                </li>
+                <li className="w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      New request
+                    </div>
+                    <div className="text-xs">27/07/2024</div>
+                  </div>
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
+                  </div>
+                </li>
+                <li className="w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      New request
+                    </div>
+                    <div className="text-xs">13/06/2024</div>
+                  </div>
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
+                  </div>
+                </li>
+                <li className="w-11/12 flex justify-between items-center">
+                  <div>
+                    <div className="text-sm text-white font-bold">
+                      New request
+                    </div>
+                    <div className="text-xs">09/12/1988</div>
+                  </div>
+                  <div>
+                    <Link href="/" className="text-xs text-white">
+                      See
+                    </Link>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </ScrollArea>
         </Card>
         <Card className="w-[252px] h-[300px] mr-7 mb-7">
           <div className="flex justify-between">
