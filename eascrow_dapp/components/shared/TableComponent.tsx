@@ -17,7 +17,7 @@ const TableComponent = (props: Props) => {
     <ScrollArea className="h-full w-full" type="always">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead className="text-sm font-bold">Description</TableHead>
             <TableHead className="text-sm font-bold">Date</TableHead>
             <TableHead className="text-sm font-bold">Type</TableHead>

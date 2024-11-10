@@ -1,8 +1,7 @@
 'use client';
 import React, { ReactNode } from 'react';
-import Link from 'next/link';
+import Image from 'next/image';
 import Sidebar from './Sidebar';
-import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 
@@ -32,16 +31,22 @@ const Layout = ({ children }: LayoutProps) => {
                   Connect Wallet
                 </Button>
               ) : (
-                <p className="max-w-80 mr-5 truncate text-mintGreen">
-                  Wallet connected: {publicKey}
-                </p>
+                <div className="flex items-center space-x-1">
+                  <Image
+                    src="/icons/wallet-green.png"
+                    alt="Eascrow website"
+                    width="20"
+                    height="20"
+                    priority
+                  />
+                  <p className="max-w-80 pt-1 truncate text-mintGreen">
+                    Connected:{' '}
+                    {publicKey
+                      ? `${publicKey.slice(0, 3)}...${publicKey.slice(-3)}`
+                      : ''}
+                  </p>
+                </div>
               )}
-              <Link href="/parameters">
-                <Avatar className="w-[48px] h-[48px]">
-                  <AvatarImage src="/images/profile.png" />
-                  <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-              </Link>
             </div>
           </header>
           <main>{children}</main>

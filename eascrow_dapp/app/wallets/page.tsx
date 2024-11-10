@@ -63,7 +63,7 @@ const Wallets = () => {
             </Button>
           </div>
         </Card>
-        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center">
+        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center opacity-50">
           <div className="w-[198px] h-[198px] flex flex-col items-center relative ">
             <h2 className="mb-[21px] text-lg font-bold text-white">Albedo</h2>
             <Image
@@ -75,14 +75,15 @@ const Wallets = () => {
               className="mb-[21px]"
             />
             <Button
-              onClick={connect}
+              // onClick={connect}
+              disabled
               className="w-[104px] h-[30px] bg-mintGreen text-background text-sm font-bold"
             >
-              {isWalletConnected ? 'Connected' : 'Connect'}
+              {isWalletConnected ? 'Connected' : 'Coming soon'}
             </Button>
           </div>
         </Card>
-        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center">
+        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center opacity-50">
           <div className="w-[198px] h-[198px] flex flex-col items-center relative ">
             <h2 className="mb-[21px] text-lg font-bold text-white">Infinity</h2>
             <Image
@@ -94,14 +95,15 @@ const Wallets = () => {
               className="mb-[21px]"
             />
             <Button
-              onClick={connect}
+              // onClick={connect}
+              disabled
               className="w-[104px] h-[30px] bg-mintGreen text-background text-sm font-bold"
             >
-              {isWalletConnected ? 'Connected' : 'Connect'}
+              {isWalletConnected ? 'Connected' : 'Coming soon'}
             </Button>
           </div>
         </Card>
-        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center">
+        <Card className="w-[237px] h-[266px] mr-7 mb-7 flex flex-col items-center justify-center opacity-50">
           <div className="w-[198px] h-[198px] flex flex-col items-center relative ">
             <h2 className="mb-[21px] text-lg font-bold text-white">Hana</h2>
             <Image
@@ -113,10 +115,11 @@ const Wallets = () => {
               className="mb-[21px]"
             />
             <Button
-              onClick={connect}
+              // onClick={connect}
+              disabled
               className="w-[104px] h-[30px] bg-mintGreen text-background text-sm font-bold"
             >
-              {isWalletConnected ? 'Connected' : 'Connect'}
+              {isWalletConnected ? 'Connected' : 'Coming soon'}
             </Button>
           </div>
         </Card>
