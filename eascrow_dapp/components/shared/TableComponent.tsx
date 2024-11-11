@@ -10,9 +10,7 @@ import {
 import Link from 'next/link';
 import { ScrollArea } from '../ui/scroll-area';
 
-type Props = {};
-
-const TableComponent = (props: Props) => {
+const TableComponent = () => {
   return (
     <ScrollArea className="h-full w-full" type="always">
       <Table>

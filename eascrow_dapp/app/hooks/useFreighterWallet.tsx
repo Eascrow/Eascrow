@@ -89,16 +89,24 @@ export const useFreighterWallet = () => {
         .then(({ isAllowed }) => setIsFreighterAllowed(isAllowed))
         .catch(() => console.error('Error requesting access'));
     }
-    const { address: publicKey } = await requestAccess().catch(() =>
-      console.error('Error requesting access')
-    );
-    setPublicKey(publicKey);
-    const { networkPassphrase, network } = await getNetwork();
-    setNetwork(network);
-    return signTransaction(xdr, {
-      accountToSign: publicKey as string,
-      networkPassphrase,
-    });
+
+    try {
+      const result = await requestAccess();
+      if (result && 'address' in result) {
+        const { address: publicKey } = result;
+        setPublicKey(publicKey);
+        const { networkPassphrase, network } = await getNetwork();
+        setNetwork(network);
+        return signTransaction(xdr, {
+          address: publicKey as string,
+          networkPassphrase,
+        });
+      } else {
+        console.error('Error: No address returned from requestAccess');
+      }
+    } catch (error) {
+      console.error('Error requesting access', error);
+    }
   }
 
   return {
