@@ -2,9 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-type Props = {};
-
-const Sidebar = (props: Props) => {
+const Sidebar = () => {
   return (
     <div className=" w-[248px] min-h-screen py-[30px] px-[24px] bg-background flex flex-col justify-between">
       <div className=" w-[174px] h-[243px] flex flex-col justify-between">

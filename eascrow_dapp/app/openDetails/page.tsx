@@ -4,15 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// import {
-//   Card,
-//   CardContent,
-//   CardDescription,
-//   CardFooter,
-//   CardHeader,
-//   CardTitle,
-// } from '@/components/ui/card';
-import { useFreighterWaller } from '@/app/hooks/useFreighterWallet';
+import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import {
   addressToScVal,
   callWithSignedXDR,
@@ -38,18 +30,8 @@ interface FormData {
 }
 
 export default function SmartContractUI() {
-  const { publicKey, signXDR, connect, hasFreighter } = useFreighterWaller();
+  const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
-
-  const [contractState, setContractState] = useState({
-    initialized: false,
-    funded: false,
-    balance: 0,
-    buyer: '',
-    seller: '',
-    token: '',
-    price: 0,
-  });
 
   const [formData, setFormData] = useState({
     sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
@@ -74,18 +56,18 @@ export default function SmartContractUI() {
     }
   }, []);
 
-  const [logs, setLogs] = useState<string[]>([]);
+  // const [logs, setLogs] = useState<string[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const addLog = (message: string) => {
-    setLogs((prevLogs) => [
-      ...prevLogs,
-      `${new Date().toLocaleTimeString()}: ${message}`,
-    ]);
-  };
+  // const addLog = (message: string) => {
+  //   setLogs((prevLogs) => [
+  //     ...prevLogs,
+  //     `${new Date().toLocaleTimeString()}: ${message}`,
+  //   ]);
+  // };
 
   const handleInitialize = async () => {
     try {
@@ -110,9 +92,13 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error('Failed to sign the XDR. The response is undefined.');
+      }
     } catch (error) {
       console.error(error);
     }
@@ -133,21 +119,15 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
-
-      // Clear localstorage and reset formData after success
-      localStorage.removeItem('formData');
-      setFetchedData(null);
-      setFormData({
-        sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
-        buyerAddress: '',
-        sellerAddress: '',
-        tokenAddress:
-          'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-        price: 0,
-      });
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error(
+          'Failed to sign the XDR. The response is undefined or incomplete.'
+        );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -171,9 +151,13 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error('Failed to sign the XDR. The response is undefined.');
+      }
     } catch (error) {
       console.error(error);
     }
@@ -195,119 +179,113 @@ export default function SmartContractUI() {
               {fetchedData?.service}
             </h2>
           </div>
-          <div>
-            {!hasFreighter && (
-              <p className="text-red-500">Freighter Wallet not detected</p>
-            )}
-            {!publicKey ? (
-              <Button
-                onClick={connect}
-                className="w-full bg-mintGreen text-background text-sm font-bold"
-              >
-                Connect Wallet
-              </Button>
-            ) : (
-              <p className=" text-mintGreen">Wallet connected: {publicKey}</p>
-            )}
-          </div>
         </div>
-        <div className="p-5">
-          <div className="space-y-4 flex flex-col items-center">
-            <div className="space-y-2 min-w-[40%]">
-              <Label htmlFor="sacAddress">Smart Contract Address</Label>
-              <Input
-                value={formData.sacAddress}
-                className="bg-transparent"
-                id="sacAddress"
-                name="sacAddress"
-                onChange={handleInputChange}
-              />
+        <div className=" flex flex-col lg:flex-row justify-between p-5">
+          <div className="  w-full space-y-4 flex flex-col items-center">
+            <div className=" flex flex-col lg:flex-row w-full justify-evenly">
+              <div className=" flex flex-col justify-between min-w-[40%] pt-2">
+                <Label htmlFor="sacAddress" className="text-white text-sm">
+                  Smart Contract Address
+                </Label>
+                <Input
+                  value={formData.sacAddress || ''}
+                  className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
+                  id="sacAddress"
+                  name="sacAddress"
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className=" flex flex-col justify-between min-w-[40%]">
+                <Label
+                  htmlFor="tokenAddress"
+                  className="flex justify-between items-center text-white text-sm "
+                >
+                  Token Address
+                  <span className="ml-2 flex items-center">
+                    Current:
+                    <Image
+                      src="/icons/xlm.png"
+                      alt="Eascrow website"
+                      width="36"
+                      height="36"
+                      priority
+                      className="ml-2"
+                    />
+                  </span>
+                </Label>
+                <Input
+                  value={formData.tokenAddress || ''}
+                  className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
+                  id="tokenAddress"
+                  name="tokenAddress"
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
-            <div className="space-y-2 min-w-[40%]">
-              <Label htmlFor="buyerAddress">Customer Address</Label>
-              <Input
-                className="bg-transparent"
-                id="buyerAddress"
-                name="buyerAddress"
-                onChange={handleInputChange}
-              />
+            <div className=" flex flex-col lg:flex-row w-full justify-evenly">
+              <div className="space-y-2 min-w-[40%]">
+                <Label htmlFor="buyerAddress" className="text-white text-sm">
+                  Customer Address
+                </Label>
+                <Input
+                  className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
+                  id="buyerAddress"
+                  name="buyerAddress"
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2 min-w-[40%]">
+                <Label htmlFor="sellerAddress" className="text-white text-sm">
+                  Service provider Address
+                </Label>
+                <Input
+                  className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
+                  id="sellerAddress"
+                  name="sellerAddress"
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
-            <div className="space-y-2 min-w-[40%]">
-              <Label htmlFor="sellerAddress">Service provider Address</Label>
-              <Input
-                className="bg-transparent"
-                id="sellerAddress"
-                name="sellerAddress"
-                onChange={handleInputChange}
-              />
+            <div className=" w-full flex justify-start lg:justify-center">
+              <div className="space-y-2">
+                <Label htmlFor="price" className="text-white text-sm ">
+                  Price
+                </Label>
+                <Input
+                  className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
+                  id="price"
+                  name="price"
+                  type="number"
+                  value={formData.price || ''}
+                  readOnly
+                />
+              </div>
             </div>
-            <div className="space-y-2 min-w-[40%]">
-              <Label
-                htmlFor="tokenAddress"
-                className="flex justify-between items-center"
+          </div>
+          <div className=" flex flex-col justify-center">
+            <div className="space-x-2">
+              <Button
+                onClick={handleInitialize}
+                className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
               >
-                Token Address
-                <span className="ml-2 flex items-center">
-                  Current:
-                  <Image
-                    src="/icons/xlm.png"
-                    alt="Eascrow website"
-                    width="36"
-                    height="36"
-                    priority
-                    className="ml-2"
-                  />
-                </span>
-              </Label>
-              <Input
-                value={formData.tokenAddress}
-                className="bg-transparent"
-                id="tokenAddress"
-                name="tokenAddress"
-                onChange={handleInputChange}
-              />
+                Initialize Contract
+              </Button>
             </div>
-            <div className="space-y-2 min-w-[40%]">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                className="bg-transparent"
-                id="price"
-                name="price"
-                type="number"
-                value={formData.price}
-                readOnly
-              />
+            <div className=" space-x-2">
+              <Button
+                onClick={handleFund}
+                className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+              >
+                Fund
+              </Button>
             </div>
-
-            <div className="min-w-[40%] flex justify-between">
-              <div className="space-x-2">
-                <span>1</span>
-                <Button
-                  onClick={handleInitialize}
-                  disabled={contractState.initialized}
-                  className="bg-background border border-mintGreen text-mintGreen text-sm font-bold"
-                >
-                  Initialize Contract
-                </Button>
-              </div>
-              <div className="space-x-2">
-                <span>2</span>
-                <Button
-                  onClick={handleFund}
-                  className="bg-background border border-mintGreen text-mintGreen text-sm font-bold"
-                >
-                  Fund
-                </Button>
-              </div>
-              <div className="space-x-2">
-                <span>3</span>
-                <Button
-                  onClick={handleReleaseFunds}
-                  className="bg-background border border-mintGreen text-mintGreen text-sm font-bold"
-                >
-                  Release Funds
-                </Button>
-              </div>
+            <div className="space-x-2">
+              <Button
+                onClick={handleReleaseFunds}
+                className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+              >
+                Release Funds
+              </Button>
             </div>
           </div>
         </div>
