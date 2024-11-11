@@ -92,9 +92,13 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error('Failed to sign the XDR. The response is undefined.');
+      }
     } catch (error) {
       console.error(error);
     }
@@ -115,21 +119,15 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
-
-      // Clear localstorage and reset formData after success
-      localStorage.removeItem('formData');
-      setFetchedData(null);
-      setFormData({
-        sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
-        buyerAddress: '',
-        sellerAddress: '',
-        tokenAddress:
-          'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-        price: 0,
-      });
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error(
+          'Failed to sign the XDR. The response is undefined or incomplete.'
+        );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -153,9 +151,13 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      console.log('txResult', txResult);
+      if (signedXDR && signedXDR.signedTxXdr) {
+        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log('txResult', txResult);
+      } else {
+        console.error('Failed to sign the XDR. The response is undefined.');
+      }
     } catch (error) {
       console.error(error);
     }

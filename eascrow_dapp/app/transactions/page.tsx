@@ -7,9 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import TableComponent from '@/components/shared/TableComponent';
 
-type Props = {};
-
-const Transactions = (props: Props) => {
+const Transactions = () => {
   const { publicKey } = useFreighterWallet();
   const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
     !!publicKey
