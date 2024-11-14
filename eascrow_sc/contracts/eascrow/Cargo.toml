@@ -1,5 +1,5 @@
 [package]
-name = "hello-world"
+name = "eascrow"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -10,7 +10,6 @@ doctest = false
 
 [dependencies]
 soroban-sdk = { version = "21.6.0" }
-num-traits = "0.2"
 
 [dev-dependencies]
 soroban-sdk = { version = "21.6.0", features = ["testutils"] }

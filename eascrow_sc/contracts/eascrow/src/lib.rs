@@ -1,6 +1,5 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, token, Address, ConversionError, Env, TryFromVal, Val};
-use num_traits::CheckedAdd;
 
 #[derive(Clone, Copy)]
 #[repr(u32)]
@@ -106,8 +105,6 @@ impl EascrowContract {
             panic!("Price must be positive");
         }
 
-        authorized_address.require_auth();
-
         set_is_initialized(&env, true);
         set_buyer_address(&env, buyer);
         set_seller_address(&env, seller);
@@ -123,7 +120,7 @@ impl EascrowContract {
         }
 
         if tokens_to_transfer <= 0 {
-            panic!("tokens_to_transfer must be positive");
+            panic!("Tokens_to_transfer must be positive");
         }
 
         let is_funded: bool = get_is_funded(&env);
@@ -163,7 +160,7 @@ impl EascrowContract {
     pub fn refund(env: Env) {
         let is_funded: bool = get_is_funded(&env);
         if !is_funded {
-            panic!("Contract is not funded");
+            panic!("Contract is not Funded");
         }
 
         get_authorized_address(&env).require_auth();
