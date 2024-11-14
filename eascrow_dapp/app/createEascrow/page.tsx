@@ -10,7 +10,7 @@ import Card from '@/components/shared/Card';
 interface FormData {
   email: string;
   service: string;
-  amount: number | null;
+  price: number | null;
   terms: string;
 }
 
@@ -19,7 +19,7 @@ export default function CreateEscrow() {
   const [formData, setFormData] = useState<FormData>({
     email: '',
     service: '',
-    amount: null,
+    price: null,
     terms: '',
   });
 
@@ -33,7 +33,7 @@ export default function CreateEscrow() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'amount' ? parseFloat(value) : value, // Convert amount to number
+      [name]: name === 'price' ? parseFloat(value) : value, // Convert price to number
     }));
   };
 
@@ -60,8 +60,8 @@ export default function CreateEscrow() {
       newErrors.service = 'Service must be a string, not a number.';
     }
 
-    if (!formData.amount || formData.amount <= 0 || formData.amount === null) {
-      newErrors.amount = 'The amount must be greater than zero.';
+    if (!formData.price || formData.price <= 0 || formData.price === null) {
+      newErrors.price = 'The price must be greater than zero.';
     }
 
     if (!formData.terms) {
@@ -82,7 +82,7 @@ export default function CreateEscrow() {
       console.error(error);
     } finally {
       // Optionally reset the form data
-      setFormData({ email: '', service: '', amount: 0, terms: '' });
+      setFormData({ email: '', service: '', price: 0, terms: '' });
       // Reset errors after successful submission
       setErrors({});
     }
@@ -143,20 +143,20 @@ export default function CreateEscrow() {
                 )}
               </div>
               <div>
-                <Label htmlFor="amount" className="text-white">
-                  Amount
+                <Label htmlFor="price" className="text-white">
+                  price
                 </Label>
                 <Input
                   placeholder="0"
                   type="number"
-                  id="amount"
-                  name="amount"
+                  id="price"
+                  name="price"
                   onChange={handleChange}
                   required
                   className="mt-2.5 w-[376px] py-[22px] px-[14px] border border-[#2c303d]"
                 />
-                {errors.amount && (
-                  <span style={{ color: 'red' }}>{errors.amount}</span>
+                {errors.price && (
+                  <span style={{ color: 'red' }}>{errors.price}</span>
                 )}
               </div>
             </div>

@@ -73,11 +73,13 @@ export async function callWithSignedXDR(xdr: string) {
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
   );
-  console.log(xdr);
+
   const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
   console.log('total signatures:', transaction.signatures.length);
+
   const sendTx = await provider.sendTransaction(transaction);
-  console.log('sent TX');
+  console.log('sent TX', sendTx);
+
   if (sendTx.errorResult) {
     console.log('Error', sendTx.errorResult);
     throw new Error('Unable to send transaction');

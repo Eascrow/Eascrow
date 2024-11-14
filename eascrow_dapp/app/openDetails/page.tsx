@@ -18,28 +18,36 @@ interface FormData {
   sacAddress: string;
   buyerAddress: string;
   sellerAddress: string;
+  authorizedAddress: string;
   tokenAddress: string;
+  email?: string;
+  service?: string;
+  terms?: string;
   price: number;
 }
 
-interface FormData {
-  email: string;
-  service: string;
-  amount: number;
-  terms: string;
-}
+// interface FormData {
+//   email: string;
+//   service: string;
+//   price: number;
+//   terms: string;
+// }
 
 export default function SmartContractUI() {
   const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
+  console.log(fetchedData);
 
-  const [formData, setFormData] = useState({
-    sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
+  const [formData, setFormData] = useState<FormData>({
+    sacAddress: 'CBOFQMB5DZADVAFW6VU3HLMSGYFC3BR7ETPROUVVC2P4WBQMHBDKCXUA',
+    // sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
     buyerAddress: '',
     sellerAddress: '',
+    authorizedAddress: '',
     tokenAddress: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
     price: 0,
   });
+  console.log(formData);
 
   useEffect(() => {
     // Fetch localstorage datas
@@ -48,10 +56,10 @@ export default function SmartContractUI() {
       const parsedData = JSON.parse(storedData) as FormData;
       setFetchedData(parsedData);
 
-      // Update formData.price with fetchedData.amount
+      // Update formData.price with fetchedData.price
       setFormData((prevFormData) => ({
         ...prevFormData,
-        price: parsedData.amount,
+        price: parsedData.price,
       }));
     }
   }, []);
@@ -76,10 +84,11 @@ export default function SmartContractUI() {
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
         addressToScVal(formData.tokenAddress),
+        addressToScVal(formData.authorizedAddress),
         numberToi128(Number(formData.price)),
       ];
 
-      console.log('contractParams', contractParams.length);
+      console.log(contractParams, contractParams.length);
 
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
@@ -87,11 +96,13 @@ export default function SmartContractUI() {
       const xdr = await getContractXDR(
         formData.sacAddress,
         'initialize',
-        formData.buyerAddress, // Contract's caller
+        formData.authorizedAddress, // contract caller
         contractParams
       );
 
       const signedXDR = await signXDR(xdr);
+      console.log(signedXDR);
+
       if (signedXDR && signedXDR.signedTxXdr) {
         console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
         const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
