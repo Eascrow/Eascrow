@@ -105,8 +105,6 @@ impl EascrowContract {
             panic!("Price must be positive");
         }
 
-        authorized_address.require_auth();
-
         set_is_initialized(&env, true);
         set_buyer_address(&env, buyer);
         set_seller_address(&env, seller);
@@ -162,7 +160,7 @@ impl EascrowContract {
     pub fn refund(env: Env) {
         let is_funded: bool = get_is_funded(&env);
         if !is_funded {
-            panic!("Contract is not funded");
+            panic!("Contract is not Funded");
         }
 
         get_authorized_address(&env).require_auth();
