@@ -46,7 +46,6 @@ impl Deployer {
         env: Env,
         wasm_hash: BytesN<32>,
         salt: BytesN<32>,
-        constructor_args: Vec<Val>,
     ) -> Address {
         let admin: Address = env.storage().instance().get(&ADMIN).unwrap();
         admin.require_auth();
@@ -60,6 +59,7 @@ impl Deployer {
         // by the same `Deployer` contract address.
         let one = U256::from_u32(&env, 1);
         set_index(&env, get_index(&env).add(&one));
+        let constructor_args: Vec<Val> = Vec::new(&env);
         let deployed_address = env
             .deployer()
             .with_address(env.current_contract_address(), salt)
