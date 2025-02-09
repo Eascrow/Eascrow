@@ -36,13 +36,28 @@ export function addressToScVal(addressStr: string) {
   return nativeToScVal(Address.fromString(addressStr));
 }
 
+export function generateSalt() {
+  return crypto.randomUUID().replaceAll('-', '');
+}
+
+export function uuidToBytes32(uuid) {
+  // Convertir l'UUID hexadécimal en tableau d'octets
+  const hex = uuid.padStart(64, '0'); // S'assure qu'on ait 32 octets en hex
+  const byteArray = new Uint8Array(32);
+
+  for (let i = 0; i < 32; i++) {
+    byteArray[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return byteArray;
+}
+
 export async function getContractXDR(
   address: string,
   contractMethod: string,
   caller: string,
   values: xdr.ScVal[]
 ) {
-  console.log('Here is the caller', caller);
+  // console.log('Here is the caller', caller);
   const provider = new SorobanRpc.Server(
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
@@ -63,7 +78,9 @@ export async function getContractXDR(
 
     return prepareTx.toXDR();
   } catch (e) {
-    console.log('Error', e);
+    // console.log('Error', e);
+    console.error(e);
+
     throw new Error('Unable to send transaction');
   }
 }
