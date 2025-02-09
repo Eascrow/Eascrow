@@ -69,8 +69,9 @@ fn test() {
         let index_array: [u8;32] = convert_bytes_to_array(&env, bytes_index);
         let salt: BytesN<32> = BytesN::from_array(&env, &index_array);
         std::println!("salt : {:#?}", salt);
-        let constructor_args: Vec<Val> = (false,).into_val(&env);
-        let contract_id = deployer_client.deploy(&wasm_hash, &salt, &constructor_args);
+        //let constructor_args: Vec<Val> = (false,).into_val(&env);
+        //let constructor_args: Vec<Val> = Vec::new(&env);
+        let contract_id = deployer_client.deploy(&wasm_hash, &salt);
         
         // Test deployed eascrow contract
         let client = contract::Client::new(&env, &contract_id);

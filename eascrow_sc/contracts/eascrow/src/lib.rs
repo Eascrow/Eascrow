@@ -95,7 +95,7 @@ pub struct EascrowContract;
 
 #[contractimpl]
 impl EascrowContract {
-    pub fn __constructor(_env: Env, _unused: bool) {
+    pub fn __constructor(_env: Env) {
     }
 
     // Called by eascrow platform every time a customer wants to buy something
