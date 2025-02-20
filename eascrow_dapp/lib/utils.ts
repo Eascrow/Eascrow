@@ -9,7 +9,14 @@ import {
   nativeToScVal,
   SorobanRpc,
   BASE_FEE,
+  Keypair,
 } from '@stellar/stellar-sdk';
+import { UUID } from 'crypto';
+
+const signerKeypair = Keypair.fromSecret(
+  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
+);
+// console.log(signerKeypair);
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -40,7 +47,7 @@ export function generateSalt() {
   return crypto.randomUUID().replaceAll('-', '');
 }
 
-export function uuidToBytes32(uuid) {
+export function uuidToBytes32(uuid: UUID) {
   // Convertir l'UUID hexadécimal en tableau d'octets
   const hex = uuid.padStart(64, '0'); // S'assure qu'on ait 32 octets en hex
   const byteArray = new Uint8Array(32);
@@ -51,16 +58,28 @@ export function uuidToBytes32(uuid) {
   return byteArray;
 }
 
+export function hexToBytes(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Hex string must have an even length');
+  }
+  const byteArray = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    byteArray[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+
+  return byteArray;
+}
+
 export async function getContractXDR(
   address: string,
   contractMethod: string,
   caller: string,
   values: xdr.ScVal[]
 ) {
-  // console.log('Here is the caller', caller);
+  console.log('Here is the caller', caller);
   const provider = new SorobanRpc.Server(
     'https://soroban-testnet.stellar.org',
-    { allowHttp: true }
+    { allowHttp: false }
   );
   const sourceAccount = await provider.getAccount(caller);
   const contract = new Contract(address);
@@ -72,13 +91,14 @@ export async function getContractXDR(
     .setTimeout(30)
     .build();
 
+  transaction.sign(signerKeypair);
+
   console.log('total signatures:', transaction.signatures.length);
   try {
     const prepareTx = await provider.prepareTransaction(transaction);
 
     return prepareTx.toXDR();
   } catch (e) {
-    // console.log('Error', e);
     console.error(e);
 
     throw new Error('Unable to send transaction');
@@ -95,6 +115,7 @@ export async function callWithSignedXDR(xdr: string) {
   console.log('total signatures:', transaction.signatures.length);
   const sendTx = await provider.sendTransaction(transaction);
   console.log('sent TX');
+
   if (sendTx.errorResult) {
     console.log('Error', sendTx.errorResult);
     throw new Error('Unable to send transaction');

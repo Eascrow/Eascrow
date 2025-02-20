@@ -1,85 +1,105 @@
 import { useState } from 'react';
 import {
-  Address,
-  Contract,
+  Keypair,
+  nativeToScVal,
   Networks,
   TransactionBuilder,
-  xdr,
-  nativeToScVal,
-  SorobanRpc,
-  BASE_FEE,
-  Keypair,
 } from '@stellar/stellar-sdk';
+import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
+
 import {
-  // addressToScVal,
-  // callWithSignedXDR,
-  // getContractXDR,
-  // numberToi128,
+  getContractXDR,
+  callWithSignedXDR,
   generateSalt,
   uuidToBytes32,
+  hexToBytes,
 } from '@/lib/utils';
+
+const signerKeypair = Keypair.fromSecret(
+  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
+);
 
 export default function DeployButton() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const { signXDR } = useFreighterWallet();
 
-  const contractId = 'CAYGT4GMVXWWGMFV7JXATNQSIDQXBORAMHXSKPPN5UWGSELMXIHFMFVI'; // Remplacez par votre contrat address
-  const networkPassphrase = Networks.TESTNET;
-  const server = new SorobanRpc.Server('https://horizon-testnet.stellar.org');
+  const contractId = 'CAB3M5IEH52YXDOOJXN74WQZSK365KPGXUHHPQI5YNJ6T6FI6QHTNRJQ';
+  const adminAddress =
+    'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
 
   const saltHex = generateSalt();
   const saltBytes32 = uuidToBytes32(saltHex);
 
-  // const wasmHashBytes = new Uint8Array([
-  //   196, 154, 41, 244, 136, 160, 143, 45, 74, 148, 82, 73, 212, 0, 94, 145, 177,
-  //   19, 84, 148, 161, 168, 174, 170, 137, 159, 195, 6, 157, 224, 124, 69,
-  // ]);
+  const wasmHashBytes = new Uint8Array([
+    245, 174, 43, 2, 4, 6, 7, 219, 155, 100, 130, 53, 61, 172, 129, 133, 134,
+    129, 171, 153, 154, 113, 242, 198, 238, 44, 214, 253, 45, 56, 255, 78,
+  ]);
 
-  async function deployContract() {
-    setLoading(true);
-    setMessage('');
+  // const deployContract = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setMessage('');
+  //     const xdr = await getContractXDR(contractId, 'deploy', adminAddress, [
+  //       nativeToScVal(wasmHashBytes),
+  //       nativeToScVal(saltBytes32),
+  //     ]);
+  //     console.log(adminAddress);
 
+  //     const signedXDR = await signXDR(xdr);
+
+  //     if (signedXDR && signedXDR.signedTxXdr) {
+  //       console.log('signedXDR', signedXDR.signedTxXdr);
+  //       const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+  //       console.log('txResult', txResult);
+  //       setMessage(`Transaction successful: ${txResult}`);
+  //     } else {
+  //       console.error('Failed to sign the XDR.');
+  //       setMessage('Failed to sign the transaction.');
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     setMessage(`Error: ${error.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const deployContract = async () => {
     try {
-      // Exemple de données
-      const wasmHash =
-        'c49a29f488a08f2d4a945249d4005e91b1135494a1a8aeaa899fc3069de07c45'; // Remplacez par votre hash
-      const salt = saltBytes32; // Salt sur 32 octets
-      const constructorArgs = false; // Arguments du constructeur si besoin
-      const contract = new Contract(contractId);
+      setLoading(true);
+      setMessage('');
 
-      // Connexion
-      const sourceKeypair = Keypair.fromSecret(
-        'slam second oak energy height apple device wait timber rookie vapor one blossom desert drill major pulse finger melody sweet vintage jealous valley hour'
-      );
-      const sourceAccount = await server.getAccount(
-        'GAKRPF4CZGG3VM6NTZQPYDRZ6TT3VOMLHJQZ443TEB2HVDJ5WPKVGAME'
-      );
-      const contractMethod = 'deploy';
-      const values = [
-        nativeToScVal(wasmHash),
-        nativeToScVal(salt),
-        nativeToScVal(constructorArgs),
-      ];
+      const xdr = await getContractXDR(contractId, 'deploy', adminAddress, [
+        nativeToScVal(wasmHashBytes),
+        nativeToScVal(saltBytes32),
+      ]);
 
-      const deployContractTx = new TransactionBuilder(sourceAccount, {
-        fee: BASE_FEE,
-        networkPassphrase: networkPassphrase,
-      })
-        .addOperation(contract.call(contractMethod, ...values))
-        .setTimeout(30)
-        .build();
+      console.log(adminAddress);
 
-      deployContractTx.sign(sourceKeypair);
+      // Convertir l'XDR en transaction
+      const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
 
-      const txResult = await server.sendTransaction(deployContractTx);
-      setMessage(`Transaction successful: ${txResult.hash}`);
+      // ✅ Ajouter la signature avec la clé privée de GC2C6IPK...
+      transaction.sign(signerKeypair);
+
+      const signedXDR = transaction.toXDR(); // Convertir en XDR signé
+
+      console.log('signedXDR', signedXDR);
+
+      const txResult = await callWithSignedXDR(signedXDR);
+
+      console.log('txResult', txResult);
+      console.log(txResult);
+
+      setMessage(`Transaction successful: ${txResult}`);
     } catch (error) {
-      setMessage(`Transaction failed: ${error}`);
       console.error(error);
+      setMessage(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col items-center">
