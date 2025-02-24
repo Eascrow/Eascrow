@@ -2,77 +2,24 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-// import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Card from '@/components/shared/Card';
-
-/////// TEST DEPLOY CONTRACT
-// import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
-// import {
-//   // addressToScVal,
-//   callWithSignedXDR,
-//   getContractXDR,
-//   // numberToi128,
-//   generateSalt,
-//   uuidToBytes32,
-// } from '@/lib/utils';
-
-// import { nativeToScVal, xdr } from '@stellar/stellar-sdk';
-
-/////// TEST DEPLOY CONTRACT
+import { Button } from '@/components/ui/button';
 
 interface FormData {
   email: string;
   service: string;
-  amount: number | null;
+  price: number | null;
   terms: string;
 }
 
 export default function CreateEscrow() {
-  /////// TEST DEPLOY CONTRACT
-  // const { signXDR } = useFreighterWallet();
-  // const saltHex = generateSalt();
-  // const saltBytes32 = uuidToBytes32(saltHex);
-
-  // const wasmHashBytes = new Uint8Array([
-  //   196, 154, 41, 244, 136, 160, 143, 45, 74, 148, 82, 73, 212, 0, 94, 145, 177,
-  //   19, 84, 148, 161, 168, 174, 170, 137, 159, 195, 6, 157, 224, 124, 69,
-  // ]);
-
-  // const deployContract = async () => {
-  //   try {
-  //     const xdr = await getContractXDR(
-  //       'CAYGT4GMVXWWGMFV7JXATNQSIDQXBORAMHXSKPPN5UWGSELMXIHFMFVI',
-  //       'deploy',
-  //       'GAKRPF4CZGG3VM6NTZQPYDRZ6TT3VOMLHJQZ443TEB2HVDJ5WPKVGAME',
-  //       [
-  //         nativeToScVal(wasmHashBytes),
-  //         nativeToScVal(saltBytes32),
-  //         nativeToScVal(false),
-  //       ]
-  //     );
-
-  //     const signedXDR = await signXDR(xdr);
-  //     if (signedXDR && signedXDR.signedTxXdr) {
-  //       console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-  //       const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-  //       console.log('txResult', txResult);
-  //     } else {
-  //       console.error('Failed to sign the XDR. The response is undefined.');
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //   }
-  // };
-
-  /////// TEST DEPLOY CONTRACT
-
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     service: '',
-    amount: null,
+    price: null,
     terms: '',
   });
 
@@ -86,7 +33,7 @@ export default function CreateEscrow() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'amount' ? parseFloat(value) : value, // Convert amount to number
+      [name]: name === 'price' ? parseFloat(value) : value,
     }));
   };
 
@@ -113,8 +60,8 @@ export default function CreateEscrow() {
       newErrors.service = 'Service must be a string, not a number.';
     }
 
-    if (!formData.amount || formData.amount <= 0 || formData.amount === null) {
-      newErrors.amount = 'The amount must be greater than zero.';
+    if (!formData.price || formData.price <= 0 || formData.price === null) {
+      newErrors.price = 'The amount must be greater than zero.';
     }
 
     if (!formData.terms) {
@@ -135,7 +82,7 @@ export default function CreateEscrow() {
       console.error(error);
     } finally {
       // Optionally reset the form data
-      setFormData({ email: '', service: '', amount: 0, terms: '' });
+      setFormData({ email: '', service: '', price: 0, terms: '' });
       // Reset errors after successful submission
       setErrors({});
     }
@@ -196,20 +143,20 @@ export default function CreateEscrow() {
                 )}
               </div>
               <div>
-                <Label htmlFor="amount" className="text-white">
-                  Amount
+                <Label htmlFor="price" className="text-white">
+                  Price
                 </Label>
                 <Input
                   placeholder="0"
                   type="number"
-                  id="amount"
-                  name="amount"
+                  id="price"
+                  name="price"
                   onChange={handleChange}
                   required
                   className="mt-2.5 w-[376px] py-[22px] px-[14px] border border-[#2c303d]"
                 />
-                {errors.amount && (
-                  <span style={{ color: 'red' }}>{errors.amount}</span>
+                {errors.price && (
+                  <span style={{ color: 'red' }}>{errors.price}</span>
                 )}
               </div>
             </div>
@@ -231,22 +178,14 @@ export default function CreateEscrow() {
                 <span style={{ color: 'red' }}>{errors.terms}</span>
               )}
             </div>
-            {/* <div className="flex justify-center">
-              <Button
-                className="mt-2.5 w-[182px] py-[6px] px-[12px] bg-mintGreen text-background text-sm font-bold"
-                onClick={deployContract}
-              >
-                CreateContract
-              </Button>
-            </div> */}
-            {/* <div className="flex justify-center">
+            <div className="flex justify-center">
               <Button
                 type="submit"
                 className="mt-2.5 w-[182px] py-[6px] px-[12px] bg-mintGreen text-background text-sm font-bold"
               >
                 Create
               </Button>
-            </div> */}
+            </div>
           </form>
         </div>
       </Card>

@@ -8,6 +8,7 @@ import TableComponent from '@/components/shared/TableComponent';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TriangleAlert } from 'lucide-react';
+import DeployContractButton from '@/components/shared/DeployContractButton';
 
 const Overview = () => {
   const { publicKey } = useFreighterWallet();
@@ -32,12 +33,7 @@ const Overview = () => {
             href={isWalletConnected ? '/createEascrow' : '#'}
             className={isWalletConnected ? '' : 'pointer-events-none'}
           >
-            <Button
-              className="w-[195px] h-[60px] px-6 py-7 mb-1 text-xl font-bold rounded-lg bg-custom-gradient hover:opacity-90 border border-[#34455C]"
-              disabled={!isWalletConnected}
-            >
-              Initiate Eascrow
-            </Button>
+            <DeployContractButton disabled={!isWalletConnected} />
           </Link>
           {!isWalletConnected && (
             <span className=" flex items-end text-xs">

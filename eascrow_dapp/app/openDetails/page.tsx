@@ -12,62 +12,73 @@ import {
   numberToi128,
 } from '@/lib/utils';
 import Card from '@/components/shared/Card';
-import { xdr } from '@stellar/stellar-sdk';
+import {
+  Keypair,
+  Networks,
+  TransactionBuilder,
+  xdr,
+} from '@stellar/stellar-sdk';
 
 interface FormData {
   sacAddress: string;
   buyerAddress: string;
   sellerAddress: string;
+  authorizedAddress: string;
   tokenAddress: string;
+  email?: string;
+  service?: string;
+  terms?: string;
   price: number;
 }
 
-interface FormData {
-  email: string;
-  service: string;
-  amount: number;
-  terms: string;
-}
+const signerKeypair = Keypair.fromSecret(
+  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
+);
 
 export default function SmartContractUI() {
   const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
+  const [eascrowContractAddress, setEascrowContractAddress] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState({
-    sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
+    sacAddress: '',
     buyerAddress: '',
     sellerAddress: '',
+    authorizedAddress:
+      'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ',
     tokenAddress: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
     price: 0,
   });
+  console.log(formData);
 
   useEffect(() => {
-    // Fetch localstorage datas
-    const storedData = localStorage.getItem('formData');
-    if (storedData) {
-      const parsedData = JSON.parse(storedData) as FormData;
-      setFetchedData(parsedData);
+    const newContractAddress = localStorage.getItem('newContractAddress');
+    const formDataString = localStorage.getItem('formData');
 
-      // Update formData.price with fetchedData.amount
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        price: parsedData.amount,
-      }));
+    if (newContractAddress && formDataString) {
+      try {
+        const parsedFormData = JSON.parse(formDataString) as FormData;
+
+        setFetchedData(parsedFormData);
+        setEascrowContractAddress(newContractAddress);
+
+        // Update price with data parsed from localStorage formData
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          sacAddress: newContractAddress,
+          price: parsedFormData.price,
+        }));
+      } catch (error) {
+        console.error('LocalStorage parsin error:', error);
+      }
     }
-  }, []);
-
-  // const [logs, setLogs] = useState<string[]>([]);
+  }, [eascrowContractAddress]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
-  // const addLog = (message: string) => {
-  //   setLogs((prevLogs) => [
-  //     ...prevLogs,
-  //     `${new Date().toLocaleTimeString()}: ${message}`,
-  //   ]);
-  // };
 
   const handleInitialize = async () => {
     try {
@@ -76,6 +87,7 @@ export default function SmartContractUI() {
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
         addressToScVal(formData.tokenAddress),
+        addressToScVal(formData.authorizedAddress),
         numberToi128(Number(formData.price)),
       ];
 
@@ -114,20 +126,36 @@ export default function SmartContractUI() {
       const xdr = await getContractXDR(
         formData.sacAddress,
         'release_funds',
-        formData.buyerAddress, // Contract's caller
+        formData.authorizedAddress, // Contract's caller
         contractParams //
       );
+      // Create transaction based on XDR
+      const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
 
-      const signedXDR = await signXDR(xdr);
-      if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
-      } else {
-        console.error(
-          'Failed to sign the XDR. The response is undefined or incomplete.'
-        );
-      }
+      // Add signature with secure admin key
+      transaction.sign(signerKeypair);
+
+      // Convert transaction into signed XDR
+      const signedXDR = transaction.toXDR();
+      await callWithSignedXDR(signedXDR);
+      console.log(transaction);
+
+      // const xdr = await getContractXDR(
+      //   formData.sacAddress,
+      //   'release_funds',
+      //   formData.authorizedAddress, // Contract's caller
+      //   contractParams //
+      // );
+
+      // const signedXDR = await signXDR(xdr);
+      // if (signedXDR && signedXDR.signedTxXdr) {
+      //   console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
+      //   const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+      //   console.log('txResult', txResult);
+      // } else {
+      //   console.error(
+      //     'Failed to sign the XDR. The response is undefined or incomplete.'
+      //   );
     } catch (error) {
       console.error(error);
     }

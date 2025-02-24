@@ -3,26 +3,30 @@ import {
   Keypair,
   nativeToScVal,
   Networks,
+  StrKey,
   TransactionBuilder,
 } from '@stellar/stellar-sdk';
-import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
-
 import {
   getContractXDR,
   callWithSignedXDR,
   generateSalt,
   uuidToBytes32,
-  hexToBytes,
 } from '@/lib/utils';
+
+interface DeployContractButtonProps {
+  disabled?: boolean;
+}
 
 const signerKeypair = Keypair.fromSecret(
   `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
 );
 
-export default function DeployButton() {
+export default function DeployContractButton({
+  disabled,
+}: DeployContractButtonProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { signXDR } = useFreighterWallet();
+  const [newContract, setNewContract] = useState('');
 
   const contractId = 'CAB3M5IEH52YXDOOJXN74WQZSK365KPGXUHHPQI5YNJ6T6FI6QHTNRJQ';
   const adminAddress =
@@ -36,36 +40,9 @@ export default function DeployButton() {
     129, 171, 153, 154, 113, 242, 198, 238, 44, 214, 253, 45, 56, 255, 78,
   ]);
 
-  // const deployContract = async () => {
-  //   try {
-  //     setLoading(true);
-  //     setMessage('');
-  //     const xdr = await getContractXDR(contractId, 'deploy', adminAddress, [
-  //       nativeToScVal(wasmHashBytes),
-  //       nativeToScVal(saltBytes32),
-  //     ]);
-  //     console.log(adminAddress);
-
-  //     const signedXDR = await signXDR(xdr);
-
-  //     if (signedXDR && signedXDR.signedTxXdr) {
-  //       console.log('signedXDR', signedXDR.signedTxXdr);
-  //       const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-  //       console.log('txResult', txResult);
-  //       setMessage(`Transaction successful: ${txResult}`);
-  //     } else {
-  //       console.error('Failed to sign the XDR.');
-  //       setMessage('Failed to sign the transaction.');
-  //     }
-  //   } catch (error) {
-  //     console.error(error);
-  //     setMessage(`Error: ${error.message}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const deployContract = async () => {
+    if (disabled) return;
+
     try {
       setLoading(true);
       setMessage('');
@@ -75,24 +52,22 @@ export default function DeployButton() {
         nativeToScVal(saltBytes32),
       ]);
 
-      console.log(adminAddress);
-
-      // Convertir l'XDR en transaction
+      // Create transaction based on XDR
       const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
 
-      // ✅ Ajouter la signature avec la clé privée de GC2C6IPK...
+      // Add signature with secure admin key
       transaction.sign(signerKeypair);
 
-      const signedXDR = transaction.toXDR(); // Convertir en XDR signé
-
-      console.log('signedXDR', signedXDR);
-
+      // Convert transaction into signed XDR
+      const signedXDR = transaction.toXDR();
       const txResult = await callWithSignedXDR(signedXDR);
 
-      console.log('txResult', txResult);
-      console.log(txResult);
-
-      setMessage(`Transaction successful: ${txResult}`);
+      // Convert BytesN<32> result from txResult into a readable contract address
+      const contractBytes = txResult._value._value;
+      const contractAddress = StrKey.encodeContract(contractBytes);
+      setNewContract(contractAddress);
+      localStorage.setItem('newContractAddress', contractAddress);
+      setMessage(`New Eascrow created at contract address: ${newContract}`);
     } catch (error) {
       console.error(error);
       setMessage(`Error: ${error.message}`);
@@ -102,15 +77,17 @@ export default function DeployButton() {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <>
       <button
         onClick={deployContract}
-        className="px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:bg-gray-300"
-        disabled={loading}
+        className={`w-[195px] h-[60px] mb-1 text-xl text-white font-bold rounded-lg 
+          bg-custom-gradient hover:opacity-90 border border-[#34455C] 
+          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={disabled || loading}
       >
         {loading ? 'Deploying...' : 'Deploy Contract'}
       </button>
-      {message && <p className="mt-4 text-sm text-gray-700">{message}</p>}
-    </div>
+      {message && <p className="mt-4 text-sm text-gray-500">{message}</p>}
+    </>
   );
 }
