@@ -67,6 +67,18 @@ const Sidebar = () => {
         </ul>
       </div>
       <ul className=" w-[174px] h-[92px] flex flex-col justify-between">
+        <Link href="/contactForm">
+          <li className=" flex h-[34px] py-[7px] px-[8px] gap-x-2 rounded-md hover:text-white hover:bg-backgroundHover">
+            <Image
+              src="/icons/mail.png"
+              alt="Contact support link"
+              width="20"
+              height="20"
+              priority
+            />
+            Contact
+          </li>
+        </Link>
         <Link href="/parameters">
           <li className=" flex h-[34px] py-[7px] px-[8px] gap-x-2 rounded-md hover:text-white hover:bg-backgroundHover">
             <Image
