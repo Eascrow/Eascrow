@@ -2,10 +2,10 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Card from '@/components/shared/Card';
+import { Button } from '@/components/ui/button';
 
 interface FormData {
   email: string;
@@ -33,7 +33,7 @@ export default function CreateEscrow() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'price' ? parseFloat(value) : value, // Convert price to number
+      [name]: name === 'price' ? parseFloat(value) : value,
     }));
   };
 
@@ -61,7 +61,7 @@ export default function CreateEscrow() {
     }
 
     if (!formData.price || formData.price <= 0 || formData.price === null) {
-      newErrors.price = 'The price must be greater than zero.';
+      newErrors.price = 'The amount must be greater than zero.';
     }
 
     if (!formData.terms) {
@@ -144,7 +144,7 @@ export default function CreateEscrow() {
               </div>
               <div>
                 <Label htmlFor="price" className="text-white">
-                  price
+                  Price
                 </Label>
                 <Input
                   placeholder="0"

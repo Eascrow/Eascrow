@@ -95,6 +95,9 @@ pub struct EascrowContract;
 
 #[contractimpl]
 impl EascrowContract {
+    pub fn __constructor(_env: Env) {
+    }
+
     // Called by eascrow platform every time a customer wants to buy something
     pub fn initialize(env: Env, buyer: Address, seller: Address, token: Address, authorized_address: Address, price: i128) {
         if get_is_initialized(&env) {

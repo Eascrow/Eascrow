@@ -10,6 +10,7 @@ import {
   SorobanRpc,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
+import { UUID } from 'crypto';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -24,8 +25,9 @@ export const numberToU64 = (val: number) => {
   return nativeToScVal(num, { type: 'u64' });
 };
 
+// Convert Stroops to XLM
 export const numberToi128 = (val: number) => {
-  const num = parseInt((val * 100).toFixed(0));
+  const num = BigInt(Math.round(val * 10 ** 7));
   return nativeToScVal(num, { type: 'i128' });
 };
 
@@ -34,6 +36,33 @@ export function addressToScVal(addressStr: string) {
   Address.fromString(addressStr);
   // Convert to ScVal as an Object with Bytes
   return nativeToScVal(Address.fromString(addressStr));
+}
+
+export function generateSalt() {
+  return crypto.randomUUID().replaceAll('-', '');
+}
+
+// Convert hexadecimal UUID into octets array
+export function uuidToBytes32(uuid: UUID) {
+  const hex = uuid.padStart(64, '0');
+  const byteArray = new Uint8Array(32);
+
+  for (let i = 0; i < 32; i++) {
+    byteArray[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return byteArray;
+}
+
+export function hexToBytes(hex: string): Uint8Array {
+  if (hex.length % 2 !== 0) {
+    throw new Error('Hex string must have an even length');
+  }
+  const byteArray = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) {
+    byteArray[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+
+  return byteArray;
 }
 
 export async function getContractXDR(
@@ -58,12 +87,13 @@ export async function getContractXDR(
     .build();
 
   console.log('total signatures:', transaction.signatures.length);
+  console.log('total signatures:', transaction.signatures);
   try {
     const prepareTx = await provider.prepareTransaction(transaction);
 
     return prepareTx.toXDR();
   } catch (e) {
-    console.log('Error', e);
+    console.error(e);
     throw new Error('Unable to send transaction');
   }
 }
@@ -78,7 +108,7 @@ export async function callWithSignedXDR(xdr: string) {
   console.log('total signatures:', transaction.signatures.length);
 
   const sendTx = await provider.sendTransaction(transaction);
-  console.log('sent TX', sendTx);
+  console.log('sent TX');
 
   if (sendTx.errorResult) {
     console.log('Error', sendTx.errorResult);
