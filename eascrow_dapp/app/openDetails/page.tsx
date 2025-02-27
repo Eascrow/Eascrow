@@ -18,6 +18,7 @@ import {
   TransactionBuilder,
   xdr,
 } from '@stellar/stellar-sdk';
+import { useRouter } from 'next/navigation';
 
 interface FormData {
   sacAddress: string;
@@ -36,6 +37,7 @@ const signerKeypair = Keypair.fromSecret(
 );
 
 export default function SmartContractUI() {
+  const router = useRouter();
   const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
   const [eascrowContractAddress, setEascrowContractAddress] = useState<
@@ -141,23 +143,7 @@ export default function SmartContractUI() {
       const signedXDR = transaction.toXDR();
       await callWithSignedXDR(signedXDR);
       console.log(transaction);
-
-      // const xdr = await getContractXDR(
-      //   formData.sacAddress,
-      //   'release_funds',
-      //   formData.authorizedAddress, // Contract's caller
-      //   contractParams //
-      // );
-
-      // const signedXDR = await signXDR(xdr);
-      // if (signedXDR && signedXDR.signedTxXdr) {
-      //   console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-      //   const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-      //   console.log('txResult', txResult);
-      // } else {
-      //   console.error(
-      //     'Failed to sign the XDR. The response is undefined or incomplete.'
-      //   );
+      router.push('/');
     } catch (error) {
       console.error(error);
     }
