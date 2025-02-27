@@ -63,14 +63,18 @@ export default function DeployContractButton({
       const txResult = await callWithSignedXDR(signedXDR);
 
       // Convert BytesN<32> result from txResult into a readable contract address
-      const contractBytes = txResult._value._value;
+      // @ts-expect-error: I need to get contract address in txResult and I'm sure this is the right way. If you console.log(txResult) you will see contract address stored in _value/_value
+      const contractBytes = txResult!._value!._value;
       const contractAddress = StrKey.encodeContract(contractBytes);
       setNewContract(contractAddress);
       localStorage.setItem('newContractAddress', contractAddress);
       setMessage(`New Eascrow created at contract address: ${newContract}`);
-    } catch (error) {
-      console.error(error);
-      setMessage(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setMessage(`Error: ${error.message}`);
+      } else {
+        setMessage('An unknown error occurred');
+      }
     } finally {
       setLoading(false);
     }

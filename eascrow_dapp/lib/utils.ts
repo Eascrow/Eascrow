@@ -10,7 +10,6 @@ import {
   SorobanRpc,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
-import { UUID } from 'crypto';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

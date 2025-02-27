@@ -102,10 +102,10 @@ export default function SmartContractUI() {
       );
 
       const signedXDR = await signXDR(xdr);
-      console.log(signedXDR);
 
       if (signedXDR && signedXDR.signedTxXdr) {
         const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log(txResult);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
@@ -162,6 +162,7 @@ export default function SmartContractUI() {
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
         const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
+        console.log(txResult);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
