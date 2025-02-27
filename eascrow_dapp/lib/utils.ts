@@ -71,7 +71,6 @@ export async function getContractXDR(
   caller: string,
   values: xdr.ScVal[]
 ) {
-  console.log('Here is the caller', caller);
   const provider = new SorobanRpc.Server(
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
@@ -86,8 +85,6 @@ export async function getContractXDR(
     .setTimeout(30)
     .build();
 
-  console.log('total signatures:', transaction.signatures.length);
-  console.log('total signatures:', transaction.signatures);
   try {
     const prepareTx = await provider.prepareTransaction(transaction);
 
@@ -103,14 +100,10 @@ export async function callWithSignedXDR(xdr: string) {
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
   );
-  console.log(xdr);
   const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
-  console.log('total signatures:', transaction.signatures.length);
   const sendTx = await provider.sendTransaction(transaction);
-  console.log('sent TX');
 
   if (sendTx.errorResult) {
-    console.log('Error', sendTx.errorResult);
     throw new Error('Unable to send transaction');
   }
   if (sendTx.status === 'PENDING') {
@@ -124,8 +117,6 @@ export async function callWithSignedXDR(xdr: string) {
     if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
       return txResponse.returnValue;
     } else {
-      console.log('Error', txResponse);
-
       throw new Error('Unable to send transaction');
     }
   }

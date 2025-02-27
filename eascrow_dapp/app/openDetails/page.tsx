@@ -53,7 +53,6 @@ export default function SmartContractUI() {
     tokenAddress: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
     price: 0,
   });
-  console.log(formData);
 
   useEffect(() => {
     const newContractAddress = localStorage.getItem('newContractAddress');
@@ -84,7 +83,6 @@ export default function SmartContractUI() {
 
   const handleInitialize = async () => {
     try {
-      console.log('formData', formData);
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
@@ -92,8 +90,6 @@ export default function SmartContractUI() {
         addressToScVal(formData.authorizedAddress),
         numberToi128(Number(formData.price)),
       ];
-
-      console.log('contractParams', contractParams.length);
 
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
@@ -107,9 +103,7 @@ export default function SmartContractUI() {
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
         const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
@@ -140,7 +134,6 @@ export default function SmartContractUI() {
       // Convert transaction into signed XDR
       const signedXDR = transaction.toXDR();
       await callWithSignedXDR(signedXDR);
-      console.log(transaction);
       router.push('/');
     } catch (error) {
       console.error(error);
@@ -166,9 +159,7 @@ export default function SmartContractUI() {
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
         const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
