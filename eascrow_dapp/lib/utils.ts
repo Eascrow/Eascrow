@@ -43,7 +43,7 @@ export function generateSalt() {
 }
 
 // Convert hexadecimal UUID into octets array
-export function uuidToBytes32(uuid: UUID) {
+export function uuidToBytes32(uuid: string) {
   const hex = uuid.padStart(64, '0');
   const byteArray = new Uint8Array(32);
 
