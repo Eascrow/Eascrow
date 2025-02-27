@@ -44,7 +44,6 @@ export const useFreighterWallet = () => {
               })
               .catch(() => console.error('Error requesting Freighter Wallet'));
           } else {
-            console.log('is not connected');
             setHasFreighter(false);
           }
         })

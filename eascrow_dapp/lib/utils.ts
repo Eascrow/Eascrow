@@ -43,7 +43,7 @@ export function generateSalt() {
 }
 
 // Convert hexadecimal UUID into octets array
-export function uuidToBytes32(uuid: UUID) {
+export function uuidToBytes32(uuid: string) {
   const hex = uuid.padStart(64, '0');
   const byteArray = new Uint8Array(32);
 
@@ -71,7 +71,6 @@ export async function getContractXDR(
   caller: string,
   values: xdr.ScVal[]
 ) {
-  console.log('Here is the caller', caller);
   const provider = new SorobanRpc.Server(
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
@@ -86,8 +85,6 @@ export async function getContractXDR(
     .setTimeout(30)
     .build();
 
-  console.log('total signatures:', transaction.signatures.length);
-  console.log('total signatures:', transaction.signatures);
   try {
     const prepareTx = await provider.prepareTransaction(transaction);
 
@@ -103,15 +100,10 @@ export async function callWithSignedXDR(xdr: string) {
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
   );
-
   const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
-  console.log('total signatures:', transaction.signatures.length);
-
   const sendTx = await provider.sendTransaction(transaction);
-  console.log('sent TX');
 
   if (sendTx.errorResult) {
-    console.log('Error', sendTx.errorResult);
     throw new Error('Unable to send transaction');
   }
   if (sendTx.status === 'PENDING') {
@@ -125,8 +117,6 @@ export async function callWithSignedXDR(xdr: string) {
     if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
       return txResponse.returnValue;
     } else {
-      console.log('Error', txResponse);
-
       throw new Error('Unable to send transaction');
     }
   }
