@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +20,23 @@ import {
 } from '@stellar/stellar-sdk';
 import { useRouter } from 'next/navigation';
 
+enum LoadingState {
+  None = 'NONE',
+  Initialize = 'INITIALIZE',
+  Fund = 'FUND',
+  Release = 'RELEASE',
+}
+
+enum ActionType {
+  SET_LOADING = 'SET_LOADING',
+  RESET_LOADING = 'RESET_LOADING',
+}
+
+interface Action {
+  type: ActionType;
+  payload?: LoadingState;
+}
+
 interface FormData {
   sacAddress: string;
   buyerAddress: string;
@@ -36,8 +53,24 @@ const signerKeypair = Keypair.fromSecret(
   `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
 );
 
+// Manage Button state when using smart contract functions
+const loadingReducer = (state: LoadingState, action: Action): LoadingState => {
+  switch (action.type) {
+    case ActionType.SET_LOADING:
+      return action.payload ?? LoadingState.None;
+    case ActionType.RESET_LOADING:
+      return LoadingState.None;
+    default:
+      return state;
+  }
+};
+
 export default function SmartContractUI() {
   const router = useRouter();
+  const [loadingState, dispatch] = useReducer(
+    loadingReducer,
+    LoadingState.None
+  );
   const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
   const [eascrowContractAddress, setEascrowContractAddress] = useState<
@@ -83,6 +116,11 @@ export default function SmartContractUI() {
 
   const handleInitialize = async () => {
     try {
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Initialize,
+      });
+
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
@@ -104,18 +142,57 @@ export default function SmartContractUI() {
       const signedXDR = await signXDR(xdr);
 
       if (signedXDR && signedXDR.signedTxXdr) {
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log(txResult);
+        await callWithSignedXDR(signedXDR.signedTxXdr);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
+    }
+  };
+
+  const handleFund = async () => {
+    try {
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Fund,
+      });
+      const contractParams = [
+        addressToScVal(formData.buyerAddress),
+        numberToi128(Number(formData.price)),
+      ];
+
+      /**
+       * This contract call will send the Assets to the Ticket Sale Contract
+       */
+      const xdr = await getContractXDR(
+        formData.sacAddress,
+        'fund',
+        formData.buyerAddress, // Contract's caller
+        contractParams
+      );
+
+      const signedXDR = await signXDR(xdr);
+      if (signedXDR && signedXDR.signedTxXdr) {
+        await callWithSignedXDR(signedXDR.signedTxXdr);
+      } else {
+        console.error('Failed to sign the XDR. The response is undefined.');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
     }
   };
 
   const handleReleaseFunds = async () => {
     try {
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Release,
+      });
       const contractParams: xdr.ScVal[] = [];
 
       /**
@@ -139,35 +216,8 @@ export default function SmartContractUI() {
       router.push('/');
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const handleFund = async () => {
-    try {
-      const contractParams = [
-        addressToScVal(formData.buyerAddress),
-        numberToi128(Number(formData.price)),
-      ];
-
-      /**
-       * This contract call will send the Assets to the Ticket Sale Contract
-       */
-      const xdr = await getContractXDR(
-        formData.sacAddress,
-        'fund',
-        formData.buyerAddress, // Contract's caller
-        contractParams //
-      );
-
-      const signedXDR = await signXDR(xdr);
-      if (signedXDR && signedXDR.signedTxXdr) {
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log(txResult);
-      } else {
-        console.error('Failed to sign the XDR. The response is undefined.');
-      }
-    } catch (error) {
-      console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
     }
   };
 
@@ -275,24 +325,31 @@ export default function SmartContractUI() {
               <Button
                 onClick={handleInitialize}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Initialize Contract
+                {loadingState === LoadingState.Initialize
+                  ? 'Initializing...'
+                  : 'Initialize Contract'}
               </Button>
             </div>
             <div className=" space-x-2">
               <Button
                 onClick={handleFund}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Fund
+                {loadingState === LoadingState.Fund ? 'Funding...' : 'Fund'}
               </Button>
             </div>
             <div className="space-x-2">
               <Button
                 onClick={handleReleaseFunds}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Release Funds
+                {loadingState === LoadingState.Release
+                  ? 'Releasing...'
+                  : 'Release Funds'}
               </Button>
             </div>
           </div>

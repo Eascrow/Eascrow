@@ -16,6 +16,7 @@ interface FormData {
 
 export default function CreateEscrow() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     email: '',
     service: '',
@@ -43,7 +44,7 @@ export default function CreateEscrow() {
     return emailPattern.test(email);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { [key in keyof FormData]?: string } = {};
 
@@ -74,15 +75,18 @@ export default function CreateEscrow() {
     }
 
     try {
+      setIsLoading(true);
+
       // Save data to localStorage on successful submission
       localStorage.setItem('formData', JSON.stringify(formData));
       // Redirect to "openDetails" page after saving data
-      router.push('/openDetails');
+      await router.push('/openDetails');
     } catch (error) {
       console.error(error);
     } finally {
       // Optionally reset the form data
       setFormData({ email: '', service: '', price: 0, terms: '' });
+      setIsLoading(false);
       // Reset errors after successful submission
       setErrors({});
     }
@@ -183,7 +187,7 @@ export default function CreateEscrow() {
                 type="submit"
                 className="mt-2.5 w-[182px] py-[6px] px-[12px] bg-mintGreen text-background text-sm font-bold"
               >
-                Create
+                {isLoading ? 'Creating...' : 'Create'}
               </Button>
             </div>
           </form>
