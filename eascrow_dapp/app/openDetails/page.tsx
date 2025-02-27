@@ -101,7 +101,7 @@ export default function SmartContractUI() {
       const xdr = await getContractXDR(
         formData.sacAddress,
         'initialize',
-        formData.authorizedAddress, // contract caller
+        formData.buyerAddress, // contract caller
         contractParams
       );
 
