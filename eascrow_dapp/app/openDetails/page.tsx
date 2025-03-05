@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,74 +12,122 @@ import {
   numberToi128,
 } from '@/lib/utils';
 import Card from '@/components/shared/Card';
-import { xdr } from '@stellar/stellar-sdk';
+import {
+  Keypair,
+  Networks,
+  TransactionBuilder,
+  xdr,
+} from '@stellar/stellar-sdk';
+import { useRouter } from 'next/navigation';
+
+enum LoadingState {
+  None = 'NONE',
+  Initialize = 'INITIALIZE',
+  Fund = 'FUND',
+  Release = 'RELEASE',
+}
+
+enum ActionType {
+  SET_LOADING = 'SET_LOADING',
+  RESET_LOADING = 'RESET_LOADING',
+}
+
+interface Action {
+  type: ActionType;
+  payload?: LoadingState;
+}
 
 interface FormData {
   sacAddress: string;
   buyerAddress: string;
   sellerAddress: string;
+  authorizedAddress: string;
   tokenAddress: string;
+  email?: string;
+  service?: string;
+  terms?: string;
   price: number;
 }
 
-interface FormData {
-  email: string;
-  service: string;
-  amount: number;
-  terms: string;
-}
+const signerKeypair = Keypair.fromSecret(
+  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
+);
+
+// Manage Button state when using smart contract functions
+const loadingReducer = (state: LoadingState, action: Action): LoadingState => {
+  switch (action.type) {
+    case ActionType.SET_LOADING:
+      return action.payload ?? LoadingState.None;
+    case ActionType.RESET_LOADING:
+      return LoadingState.None;
+    default:
+      return state;
+  }
+};
 
 export default function SmartContractUI() {
+  const router = useRouter();
+  const [loadingState, dispatch] = useReducer(
+    loadingReducer,
+    LoadingState.None
+  );
   const { signXDR } = useFreighterWallet();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
+  const [eascrowContractAddress, setEascrowContractAddress] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState({
-    sacAddress: 'CDUXCICCRTDFNN56U75E4L66CYMC5JZR77WZKTEKS5YMMNGZW3MVXDL3',
+    sacAddress: '',
     buyerAddress: '',
     sellerAddress: '',
+    authorizedAddress:
+      'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ',
     tokenAddress: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
     price: 0,
   });
 
   useEffect(() => {
-    // Fetch localstorage datas
-    const storedData = localStorage.getItem('formData');
-    if (storedData) {
-      const parsedData = JSON.parse(storedData) as FormData;
-      setFetchedData(parsedData);
+    const newContractAddress = localStorage.getItem('newContractAddress');
+    const formDataString = localStorage.getItem('formData');
 
-      // Update formData.price with fetchedData.amount
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        price: parsedData.amount,
-      }));
+    if (newContractAddress && formDataString) {
+      try {
+        const parsedFormData = JSON.parse(formDataString) as FormData;
+
+        setFetchedData(parsedFormData);
+        setEascrowContractAddress(newContractAddress);
+
+        // Update price with data parsed from localStorage formData
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          sacAddress: newContractAddress,
+          price: parsedFormData.price,
+        }));
+      } catch (error) {
+        console.error('LocalStorage parsin error:', error);
+      }
     }
-  }, []);
-
-  // const [logs, setLogs] = useState<string[]>([]);
+  }, [eascrowContractAddress]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // const addLog = (message: string) => {
-  //   setLogs((prevLogs) => [
-  //     ...prevLogs,
-  //     `${new Date().toLocaleTimeString()}: ${message}`,
-  //   ]);
-  // };
-
   const handleInitialize = async () => {
     try {
-      console.log('formData', formData);
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Initialize,
+      });
+
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
         addressToScVal(formData.tokenAddress),
+        addressToScVal(formData.authorizedAddress),
         numberToi128(Number(formData.price)),
       ];
-
-      console.log('contractParams', contractParams.length);
 
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
@@ -87,54 +135,30 @@ export default function SmartContractUI() {
       const xdr = await getContractXDR(
         formData.sacAddress,
         'initialize',
-        formData.buyerAddress, // Contract's caller
+        formData.buyerAddress, // contract caller
         contractParams
       );
 
       const signedXDR = await signXDR(xdr);
+
       if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
+        await callWithSignedXDR(signedXDR.signedTxXdr);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
     } catch (error) {
       console.error(error);
-    }
-  };
-
-  const handleReleaseFunds = async () => {
-    try {
-      const contractParams: xdr.ScVal[] = [];
-
-      /**
-       * This contract call will send the Assets to the Ticket Sale Contract
-       */
-      const xdr = await getContractXDR(
-        formData.sacAddress,
-        'release_funds',
-        formData.buyerAddress, // Contract's caller
-        contractParams //
-      );
-
-      const signedXDR = await signXDR(xdr);
-      if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
-      } else {
-        console.error(
-          'Failed to sign the XDR. The response is undefined or incomplete.'
-        );
-      }
-    } catch (error) {
-      console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
     }
   };
 
   const handleFund = async () => {
     try {
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Fund,
+      });
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         numberToi128(Number(formData.price)),
@@ -147,19 +171,53 @@ export default function SmartContractUI() {
         formData.sacAddress,
         'fund',
         formData.buyerAddress, // Contract's caller
-        contractParams //
+        contractParams
       );
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        console.log('signedXDR', signedXDR, signedXDR.signedTxXdr);
-        const txResult = await callWithSignedXDR(signedXDR.signedTxXdr);
-        console.log('txResult', txResult);
+        await callWithSignedXDR(signedXDR.signedTxXdr);
       } else {
         console.error('Failed to sign the XDR. The response is undefined.');
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
+    }
+  };
+
+  const handleReleaseFunds = async () => {
+    try {
+      dispatch({
+        type: ActionType.SET_LOADING,
+        payload: LoadingState.Release,
+      });
+      const contractParams: xdr.ScVal[] = [];
+
+      /**
+       * This contract call will send the Assets to the Ticket Sale Contract
+       */
+      const xdr = await getContractXDR(
+        formData.sacAddress,
+        'release_funds',
+        formData.authorizedAddress, // Contract's caller
+        contractParams //
+      );
+      // Create transaction based on XDR
+      const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
+
+      // Add signature with secure admin key
+      transaction.sign(signerKeypair);
+
+      // Convert transaction into signed XDR
+      const signedXDR = transaction.toXDR();
+      await callWithSignedXDR(signedXDR);
+      router.push('/');
+    } catch (error) {
+      console.error(error);
+    } finally {
+      dispatch({ type: ActionType.RESET_LOADING });
     }
   };
 
@@ -267,24 +325,31 @@ export default function SmartContractUI() {
               <Button
                 onClick={handleInitialize}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Initialize Contract
+                {loadingState === LoadingState.Initialize
+                  ? 'Initializing...'
+                  : 'Initialize Contract'}
               </Button>
             </div>
             <div className=" space-x-2">
               <Button
                 onClick={handleFund}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Fund
+                {loadingState === LoadingState.Fund ? 'Funding...' : 'Fund'}
               </Button>
             </div>
             <div className="space-x-2">
               <Button
                 onClick={handleReleaseFunds}
                 className="w-full h-[65px] mb-5 bg-mintGreen text-background text-sm font-bold"
+                disabled={loadingState !== LoadingState.None}
               >
-                Release Funds
+                {loadingState === LoadingState.Release
+                  ? 'Releasing...'
+                  : 'Release Funds'}
               </Button>
             </div>
           </div>

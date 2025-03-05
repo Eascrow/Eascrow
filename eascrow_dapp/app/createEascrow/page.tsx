@@ -2,24 +2,25 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Card from '@/components/shared/Card';
+import { Button } from '@/components/ui/button';
 
 interface FormData {
   email: string;
   service: string;
-  amount: number | null;
+  price: number | null;
   terms: string;
 }
 
 export default function CreateEscrow() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     email: '',
     service: '',
-    amount: null,
+    price: null,
     terms: '',
   });
 
@@ -33,7 +34,7 @@ export default function CreateEscrow() {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: name === 'amount' ? parseFloat(value) : value, // Convert amount to number
+      [name]: name === 'price' ? parseFloat(value) : value,
     }));
   };
 
@@ -43,7 +44,7 @@ export default function CreateEscrow() {
     return emailPattern.test(email);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: { [key in keyof FormData]?: string } = {};
 
@@ -60,8 +61,8 @@ export default function CreateEscrow() {
       newErrors.service = 'Service must be a string, not a number.';
     }
 
-    if (!formData.amount || formData.amount <= 0 || formData.amount === null) {
-      newErrors.amount = 'The amount must be greater than zero.';
+    if (!formData.price || formData.price <= 0 || formData.price === null) {
+      newErrors.price = 'The amount must be greater than zero.';
     }
 
     if (!formData.terms) {
@@ -74,15 +75,18 @@ export default function CreateEscrow() {
     }
 
     try {
+      setIsLoading(true);
+
       // Save data to localStorage on successful submission
       localStorage.setItem('formData', JSON.stringify(formData));
       // Redirect to "openDetails" page after saving data
-      router.push('/openDetails');
+      await router.push('/openDetails');
     } catch (error) {
       console.error(error);
     } finally {
       // Optionally reset the form data
-      setFormData({ email: '', service: '', amount: 0, terms: '' });
+      setFormData({ email: '', service: '', price: 0, terms: '' });
+      setIsLoading(false);
       // Reset errors after successful submission
       setErrors({});
     }
@@ -143,20 +147,20 @@ export default function CreateEscrow() {
                 )}
               </div>
               <div>
-                <Label htmlFor="amount" className="text-white">
-                  Amount
+                <Label htmlFor="price" className="text-white">
+                  Price
                 </Label>
                 <Input
                   placeholder="0"
                   type="number"
-                  id="amount"
-                  name="amount"
+                  id="price"
+                  name="price"
                   onChange={handleChange}
                   required
                   className="mt-2.5 w-[376px] py-[22px] px-[14px] border border-[#2c303d]"
                 />
-                {errors.amount && (
-                  <span style={{ color: 'red' }}>{errors.amount}</span>
+                {errors.price && (
+                  <span style={{ color: 'red' }}>{errors.price}</span>
                 )}
               </div>
             </div>
@@ -183,7 +187,7 @@ export default function CreateEscrow() {
                 type="submit"
                 className="mt-2.5 w-[182px] py-[6px] px-[12px] bg-mintGreen text-background text-sm font-bold"
               >
-                Create
+                {isLoading ? 'Creating...' : 'Create'}
               </Button>
             </div>
           </form>
