@@ -1,0 +1,51 @@
+Overview
+We put the EascrowContract through its paces-from kicking things off (initializing) to funding it, then either releasing the funds to the seller or giving the money back to the buyer. We also made sure it throws errors when things go wrong, like trying to fund too much or using the wrong buyer.
+
+Test Setup
+
+    We used the Soroban SDK test environment.
+    A fake token contract (the StellarAsset contract) was used so we could mint and manage tokens.
+    Randomly generated addresses stood in for the buyer, seller, and token admin.
+    We bypassed real auth checks with env.mock_all_auths() to keep things simple.
+
+What We Tested
+
+    Full Flow Test (test_full_flow)
+    What we did:
+        Minted tokens for the buyer.
+        Initialized the contract with buyer, seller, token details, and admin.
+        Funded the contract in two parts until it hit the right amount.
+        Released the funds to the seller.
+    Outcome:
+        The buyer’s balance went down as expected, the seller got paid, and the contract’s balance was zeroed out after the funds were released.
+
+    Double Initialization (test_double_initialize)
+    What we did:
+        We initialized the contract once.
+        Then tried initializing it again with the same settings.
+    Outcome:
+        The contract correctly panicked on the second initialization with the message “Contract is already initialized.”
+
+    Overfunding (test_overfund)
+    What we did:
+        Set a funding target.
+        Attempted to send more tokens than allowed.
+    Outcome:
+        The contract didn’t allow it and panicked with “Cannot overfund the contract.”
+
+    Wrong Buyer Funding (test_fund_wrong_buyer)
+    What we did:
+        Set up the contract with a designated buyer.
+        Tried to fund it using a different, incorrect buyer address.
+    Outcome:
+        It panicked with “Buyer address is invalid” as expected.
+
+    Refund (test_refund)
+    What we did:
+        Funded the contract normally.
+        Instead of releasing the funds to the seller, we triggered a refund to the buyer.
+    Outcome:
+        The refund worked: the contract’s balance dropped to zero, and the buyer got back their tokens.
+
+Wrap-up
+Overall, these tests show that our contract is doing what it’s supposed to. It correctly handles normal transactions, and it stops things when someone tries to break the rules (like overfunding or using the wrong buyer). The tests give us confidence that the EascrowContract is robust and behaves as expected in various scenarios.
