@@ -9,6 +9,7 @@ import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TriangleAlert } from 'lucide-react';
 import DeployContractButton from '@/components/shared/DeployContractButton';
+import ChartWidget from '@/components/shared/ChartWidget';
 
 const Overview = () => {
   const { publicKey } = useFreighterWallet();
@@ -108,34 +109,9 @@ const Overview = () => {
           </div>
           <TableComponent />
         </Card>
-        <Card className="w-[464px] h-[300px] mr-7 mb-7 ">
-          <div className="flex justify-between">
-            <div className="flex items-center space-x-2.5 mb-5">
-              <Image
-                src="/icons/xlm.png"
-                alt="Eascrow website"
-                width="36"
-                height="36"
-                priority
-              />
-              <h3 className="text-2xl text-white font-bold">$XLM</h3>
-            </div>
-            <div>
-              <Link href="/chart">
-                <Button className="w-full bg-mintGreen text-background text-sm font-bold">
-                  See more
-                </Button>
-              </Link>
-            </div>
-          </div>
-          <div className="w-[419px] h-[198px] ">
-            <Image
-              src="/images/xlm-graph.png"
-              alt="Eascrow website"
-              width={419}
-              height={198}
-              priority
-            />
+        <Card className="w-[464px] mr-7 mb-7 ">
+          <div className="w-[419px]">
+            <ChartWidget />
           </div>
         </Card>
         <Card className="w-[252px] h-[300px] mr-7 mb-7 overflow-hidden">
@@ -154,7 +130,7 @@ const Overview = () => {
           <ScrollArea className="h-full w-full" type="always">
             <div>
               <ul className="space-y-6">
-                <li className="w-11/12 w-11/12 flex justify-between items-center">
+                <li className="w-11/12 flex justify-between items-center">
                   <div>
                     <div className="text-sm text-white font-bold">
                       New request
