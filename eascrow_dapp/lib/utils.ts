@@ -74,12 +74,21 @@ export async function getContractXDR(
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
   );
+  // const provider = new SorobanRpc.Server(
+  //   'https://mainnet.sorobanrpc.com',
+  //   { allowHttp: true }
+  // );
+
   const sourceAccount = await provider.getAccount(caller);
   const contract = new Contract(address);
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
     networkPassphrase: Networks.TESTNET,
   })
+    // const transaction = new TransactionBuilder(sourceAccount, {
+    //   fee: BASE_FEE,
+    //   networkPassphrase: Networks.PUBLIC,
+    // })
     .addOperation(contract.call(contractMethod, ...values))
     .setTimeout(30)
     .build();
@@ -99,7 +108,12 @@ export async function callWithSignedXDR(xdr: string) {
     'https://soroban-testnet.stellar.org',
     { allowHttp: true }
   );
+  // const provider = new SorobanRpc.Server(
+  //   'https://mainnet.sorobanrpc.com',
+  //   { allowHttp: true }
+  // );
   const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
+  // const transaction = TransactionBuilder.fromXDR(xdr, Networks.PUBLIC);
   const sendTx = await provider.sendTransaction(transaction);
 
   if (sendTx.errorResult) {
