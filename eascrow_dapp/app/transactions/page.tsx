@@ -30,12 +30,12 @@ const Transactions = () => {
             href={isWalletConnected ? '/createEascrow' : '#'}
             className={isWalletConnected ? '' : 'pointer-events-none'}
           >
-            <Button
+            {/* <Button
               className="w-[195px] h-[60px] px-6 py-7 text-xl font-bold rounded-lg bg-custom-gradient hover:opacity-90 border border-[#34455C]"
               disabled={!isWalletConnected}
             >
               Initiate Eascrow
-            </Button>
+            </Button> */}
           </Link>
           {!isWalletConnected && (
             <span className="ml-2 text-xs">Please Connect</span>

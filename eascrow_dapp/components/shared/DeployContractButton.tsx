@@ -25,16 +25,18 @@ export default function DeployContractButton({
   disabled,
 }: DeployContractButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
 
-  const contractId = 'CAB3M5IEH52YXDOOJXN74WQZSK365KPGXUHHPQI5YNJ6T6FI6QHTNRJQ';
+  const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
   const adminAddress =
     'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
 
   const saltHex = generateSalt();
   const saltBytes32 = uuidToBytes32(saltHex);
 
+  // TODO: update le wasmHash
   const wasmHashBytes = new Uint8Array([
     245, 174, 43, 2, 4, 6, 7, 219, 155, 100, 130, 53, 61, 172, 129, 133, 134,
     129, 171, 153, 154, 113, 242, 198, 238, 44, 214, 253, 45, 56, 255, 78,
@@ -73,6 +75,8 @@ export default function DeployContractButton({
       if (error instanceof Error) {
         setMessage(`Error: ${error.message}`);
       } else {
+        console.error(error);
+        setIsError(true);
         setMessage('An unknown error occurred');
       }
     } finally {

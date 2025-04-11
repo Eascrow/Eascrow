@@ -134,3 +134,70 @@ export async function callWithSignedXDR(xdr: string) {
     }
   }
 }
+
+// export async function getTransactions(accountId: string) {
+//   const server = new Server('https://horizon.stellar.org');
+
+//   try {
+//     const transactions = await server
+//       .transactions()
+//       .forAccount(accountId)
+//       .order('desc')
+//       .limit(10)
+//       .call();
+
+//     return transactions.records.map((tx) => ({
+//       id: tx.id,
+//       hash: tx.hash,
+//       date: tx.created_at,
+//       memo: tx.memo,
+//       successful: tx.successful,
+//       source: tx.source_account,
+//     }));
+//   } catch (error) {
+//     console.error('Erreur lors de la récupération des transactions:', error);
+//     return [];
+//   }
+// }
+// const test = async () => {
+//   const requestBody = {
+//     jsonrpc: '2.0',
+//     id: 8675309,
+//     method: 'getTransactions',
+//     params: {
+//       startLedger: 218992,
+//       pagination: {
+//         limit: 5,
+//       },
+//     },
+//   };
+//   const res = await fetch('https://soroban-testnet.stellar.org', {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(requestBody),
+//   });
+//   const json = await res.json();
+//   console.log(json);
+// };
+
+// const test = async () => {
+//   const myHeaders = new Headers();
+//   myHeaders.append('Accept', 'application/json');
+
+//   const requestOptions = {
+//     method: 'GET',
+//     headers: myHeaders,
+//     redirect: 'follow',
+//   };
+
+//   fetch(
+//     'https://horizon-testnet.stellar.org/accounts/GAKRPF4CZGG3VM6NTZQPYDRZ6TT3VOMLHJQZ443TEB2HVDJ5WPKVGAME/transactions',
+//     requestOptions
+//   )
+//     .then((response) => response.text())
+//     .then((result) => console.log(result))
+//     .catch((error) => console.error(error));
+// };
+// test();
