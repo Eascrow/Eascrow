@@ -70,25 +70,31 @@ export async function getContractXDR(
   caller: string,
   values: xdr.ScVal[]
 ) {
-  const provider = new SorobanRpc.Server(
-    'https://soroban-testnet.stellar.org',
-    { allowHttp: true }
-  );
+  // MAINNET
+  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+    allowHttp: true,
+  });
+
+  // TESTNET
   // const provider = new SorobanRpc.Server(
-  //   'https://mainnet.sorobanrpc.com',
+  //   'https://soroban-testnet.stellar.org',
   //   { allowHttp: true }
   // );
 
   const sourceAccount = await provider.getAccount(caller);
   const contract = new Contract(address);
+
+  // TESTNET
+  // const transaction = new TransactionBuilder(sourceAccount, {
+  //   fee: BASE_FEE,
+  //   networkPassphrase: Networks.TESTNET,
+  // })
+
+  // MAINNET
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: Networks.PUBLIC,
   })
-    // const transaction = new TransactionBuilder(sourceAccount, {
-    //   fee: BASE_FEE,
-    //   networkPassphrase: Networks.PUBLIC,
-    // })
     .addOperation(contract.call(contractMethod, ...values))
     .setTimeout(30)
     .build();
@@ -104,16 +110,22 @@ export async function getContractXDR(
 }
 
 export async function callWithSignedXDR(xdr: string) {
-  const provider = new SorobanRpc.Server(
-    'https://soroban-testnet.stellar.org',
-    { allowHttp: true }
-  );
+  // TESTNET
   // const provider = new SorobanRpc.Server(
-  //   'https://mainnet.sorobanrpc.com',
+  //   'https://soroban-testnet.stellar.org',
   //   { allowHttp: true }
   // );
-  const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
-  // const transaction = TransactionBuilder.fromXDR(xdr, Networks.PUBLIC);
+
+  // MAINNET
+  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+    allowHttp: true,
+  });
+
+  // TESTNET
+  // const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
+
+  // MAINNET
+  const transaction = TransactionBuilder.fromXDR(xdr, Networks.PUBLIC);
   const sendTx = await provider.sendTransaction(transaction);
 
   if (sendTx.errorResult) {

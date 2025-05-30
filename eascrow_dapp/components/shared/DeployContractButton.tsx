@@ -29,9 +29,15 @@ export default function DeployContractButton({
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
 
-  const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
+  // TESTNET
+  // const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
+  // const adminAddress =
+  //   'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
+
+  // MAINNET
+  const contractId = 'CAYGT4GMVXWWGMFV7JXATNQSIDQXBORAMHXSKPPN5UWGSELMXIHFMFVI';
   const adminAddress =
-    'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
+    'GANV25KVOSULP5KMQ62RAZTVXR25JU2N3EVANKQB3PBR5A4YPPWKIJZ3';
 
   const saltHex = generateSalt();
   const saltBytes32 = uuidToBytes32(saltHex);
