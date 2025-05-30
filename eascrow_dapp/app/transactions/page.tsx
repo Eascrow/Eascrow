@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Card from '@/components/shared/Card';
-// import { Button } from '@/components/ui/button';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import TableComponent from '@/components/shared/TableComponent';
 
