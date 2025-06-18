@@ -7,9 +7,10 @@ import {
   TransactionBuilder,
   xdr,
   nativeToScVal,
-  SorobanRpc,
+  rpc as SorobanRpc,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
+import { AssembledTransaction } from '@stellar/stellar-sdk/minimal/contract';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

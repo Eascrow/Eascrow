@@ -1,26 +1,14 @@
 import { useState } from 'react';
 import {
   Keypair,
-  nativeToScVal,
-  Networks,
-  StrKey,
-  TransactionBuilder,
+  rpc as SorobanRpc,
 } from '@stellar/stellar-sdk';
-import {
-  getContractXDR,
-  callWithSignedXDR,
-  generateSalt,
-  uuidToBytes32,
-} from '@/lib/utils';
 import { Client as EascrowClient } from 'eascrow-sc';
-import { hash } from '@stellar/stellar-sdk/minimal';
-import { basicNodeSigner,AssembledTransaction, type AssembledTransactionOptions, type Tx } from '@stellar/stellar-sdk/minimal/contract'
 
 
 
 const rpcUrl = "https://soroban-testnet.stellar.org";
 const networkPassphrase = "Test SDF Network ; September 2015";
-const timeoutInSeconds = 30;
 
 interface DeployContractButtonProps {
   disabled?: boolean;
@@ -45,13 +33,6 @@ export default function DeployContractButton({
   
   // TESTNET 
   // (Eascrow Contract)
-  const contractId = 'CCXRMV2VYZGGNQNCVUBCMFFZH47CDEIX4CSKZHNVBIMLUAAXZXSGCT74';
-  // [Jose]: I used this to deploy the contract.
-  const adminAddress =
-    'GCXYZTVG7VLC4SIEIN75GJ3KJZF4LXX2VCVM2HNORXOUDB47LHHNBY6F';
-
-  const saltHex = generateSalt();
-  const saltBytes32 = uuidToBytes32(saltHex);
 
   // TODO: update le wasmHash
   const wasmHash = "ae4333761a7bcc80c8eddcb460e35bbbf21ca3bd68ea98c841b2df8ae6abbe71";
@@ -63,32 +44,26 @@ export default function DeployContractButton({
       setLoading(true);
       setMessage('');
 
-
-
       // Assemble transaction
       const at = await EascrowClient.deploy({
-        admin: adminAddress,
+        admin: signerKeypair.publicKey(),
       },{
         wasmHash,
         rpcUrl,
         networkPassphrase,
-        publicKey: adminAddress,
+        publicKey: signerKeypair.publicKey(),
       });
       const deployedContractId = at.result.options.contractId;
-
       // Sign transaction
-      console.log('at', at);
-      console.log('Before signing');
-      const signedAt = await at.sign({
-        signTransaction: basicNodeSigner(signerKeypair, networkPassphrase).signTransaction
-      })
-      console.log('After signing');
-      console.log('signedAt', signedAt);
-
-      console.log('deployedContractId', deployedContractId);
+      at.built!.sign(signerKeypair);
+      // Submit
+      const provider = new SorobanRpc.Server(rpcUrl, {
+        allowHttp: true,
+      });
+      await provider.sendTransaction(at.built!);
       setNewContract(deployedContractId);
       localStorage.setItem('newContractAddress', deployedContractId);
-      setMessage(`New Eascrow created at contract address: ${newContract}`);
+      setMessage(`New Eascrow created at contract address: ${deployedContractId}`);
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(`Error: ${error.message}`);
@@ -114,6 +89,12 @@ export default function DeployContractButton({
         {loading ? 'Deploying...' : 'Deploy Contract'}
       </button>
       {message && <p className="mt-4 text-sm text-gray-500">{message}</p>}
+      <p className="mt-4 text-sm text-gray-500">
+        Click to copy contract address:{''}
+        {newContract && <span className="cursor-pointer" onClick={() => {
+          navigator.clipboard.writeText(newContract);
+        }}>{newContract}</span>}
+      </p>
     </>
   );
 }
