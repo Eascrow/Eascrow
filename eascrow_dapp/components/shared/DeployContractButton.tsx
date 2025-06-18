@@ -12,6 +12,15 @@ import {
   generateSalt,
   uuidToBytes32,
 } from '@/lib/utils';
+import { Client as EascrowClient } from 'eascrow-sc';
+import { hash } from '@stellar/stellar-sdk/minimal';
+import { basicNodeSigner,AssembledTransaction, type AssembledTransactionOptions, type Tx } from '@stellar/stellar-sdk/minimal/contract'
+
+
+
+const rpcUrl = "https://soroban-testnet.stellar.org";
+const networkPassphrase = "Test SDF Network ; September 2015";
+const timeoutInSeconds = 30;
 
 interface DeployContractButtonProps {
   disabled?: boolean;
@@ -29,24 +38,23 @@ export default function DeployContractButton({
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
 
-  // TESTNET
+  // MAINNET (TODO)
   // const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
   // const adminAddress =
   //   'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
-
-  // MAINNET
-  const contractId = 'CAYGT4GMVXWWGMFV7JXATNQSIDQXBORAMHXSKPPN5UWGSELMXIHFMFVI';
+  
+  // TESTNET 
+  // (Eascrow Contract)
+  const contractId = 'CCXRMV2VYZGGNQNCVUBCMFFZH47CDEIX4CSKZHNVBIMLUAAXZXSGCT74';
+  // [Jose]: I used this to deploy the contract.
   const adminAddress =
-    'GANV25KVOSULP5KMQ62RAZTVXR25JU2N3EVANKQB3PBR5A4YPPWKIJZ3';
+    'GCXYZTVG7VLC4SIEIN75GJ3KJZF4LXX2VCVM2HNORXOUDB47LHHNBY6F';
 
   const saltHex = generateSalt();
   const saltBytes32 = uuidToBytes32(saltHex);
 
   // TODO: update le wasmHash
-  const wasmHashBytes = new Uint8Array([
-    245, 174, 43, 2, 4, 6, 7, 219, 155, 100, 130, 53, 61, 172, 129, 133, 134,
-    129, 171, 153, 154, 113, 242, 198, 238, 44, 214, 253, 45, 56, 255, 78,
-  ]);
+  const wasmHash = "ae4333761a7bcc80c8eddcb460e35bbbf21ca3bd68ea98c841b2df8ae6abbe71";
 
   const deployContract = async () => {
     if (disabled) return;
@@ -55,27 +63,31 @@ export default function DeployContractButton({
       setLoading(true);
       setMessage('');
 
-      const xdr = await getContractXDR(contractId, 'deploy', adminAddress, [
-        nativeToScVal(wasmHashBytes),
-        nativeToScVal(saltBytes32),
-      ]);
 
-      // Create transaction based on XDR
-      const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
 
-      // Add signature with secure admin key
-      transaction.sign(signerKeypair);
+      // Assemble transaction
+      const at = await EascrowClient.deploy({
+        admin: adminAddress,
+      },{
+        wasmHash,
+        rpcUrl,
+        networkPassphrase,
+        publicKey: adminAddress,
+      });
+      const deployedContractId = at.result.options.contractId;
 
-      // Convert transaction into signed XDR
-      const signedXDR = transaction.toXDR();
-      const txResult = await callWithSignedXDR(signedXDR);
+      // Sign transaction
+      console.log('at', at);
+      console.log('Before signing');
+      const signedAt = await at.sign({
+        signTransaction: basicNodeSigner(signerKeypair, networkPassphrase).signTransaction
+      })
+      console.log('After signing');
+      console.log('signedAt', signedAt);
 
-      // Convert BytesN<32> result from txResult into a readable contract address
-      // @ts-expect-error: I need to get contract address in txResult and I'm sure this is the right way. If you console.log(txResult) you will see contract address stored in _value/_value
-      const contractBytes = txResult!._value!._value;
-      const contractAddress = StrKey.encodeContract(contractBytes);
-      setNewContract(contractAddress);
-      localStorage.setItem('newContractAddress', contractAddress);
+      console.log('deployedContractId', deployedContractId);
+      setNewContract(deployedContractId);
+      localStorage.setItem('newContractAddress', deployedContractId);
       setMessage(`New Eascrow created at contract address: ${newContract}`);
     } catch (error: unknown) {
       if (error instanceof Error) {
