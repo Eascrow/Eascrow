@@ -16,7 +16,6 @@ const TableComponent = ({
 }: {
   transactions?: Horizon.ServerApi.TransactionRecord[];
 }) => {
-  console.log(transactions);
   // Helper function to format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {

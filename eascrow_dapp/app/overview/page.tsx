@@ -21,10 +21,6 @@ const Overview = () => {
     setIsWalletConnected(!!publicKey);
   }, [publicKey]);
 
-  useEffect(() => {
-    console.log(balances);
-  }, [balances]);
-
   return (
     <div className="pt-[70px] pb-5 px-9">
       <section className="flex items-center justify-between mb-16">
