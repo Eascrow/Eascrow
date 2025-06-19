@@ -10,21 +10,34 @@ import {
   setAllowed,
 } from '@stellar/freighter-api';
 import { Horizon } from '@stellar/stellar-sdk';
-import { getBalances } from '../../lib/utils';
+import { getBalances, getTransactions } from '../../lib/utils';
 
 export const useFreighterWallet = () => {
   const [hasFreighter, setHasFreighter] = useState<boolean>(false);
   const [isFreighterAllowed, setIsFreighterAllowed] = useState<boolean>(false);
   const [publicKey, setPublicKey] = useState<string>();
   const [network, setNetwork] = useState<string>();
+  const [transactions, setTransactions] = useState<
+    Horizon.ServerApi.TransactionRecord[]
+  >([]);
   const [balances, setBalances] = useState<
     Horizon.ServerApi.AccountRecord['balances']
   >([]);
 
-  useEffect(() => {
+  function fetchWalletData() {
     if (publicKey) {
       getBalances(publicKey).then(setBalances);
+      getTransactions(publicKey).then(setTransactions);
     }
+  }
+
+  useEffect(() => {
+    if (publicKey) {
+      fetchWalletData();
+    }
+    const intervalId = setInterval(fetchWalletData, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
   }, [publicKey]);
 
   useEffect(() => {
@@ -127,5 +140,6 @@ export const useFreighterWallet = () => {
     isFreighterAllowed,
     connect,
     balances,
+    transactions,
   };
 };

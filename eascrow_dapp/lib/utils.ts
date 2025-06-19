@@ -263,3 +263,14 @@ export const getBalances = async (
   const account = await horizon.accounts().accountId(publicKey).call();
   return account.balances;
 };
+
+export const getTransactions = async (
+  publicKey: string
+): Promise<Horizon.ServerApi.TransactionRecord[]> => {
+  const horizon = new Horizon.Server(HORIZON_URL);
+  const transactions = await horizon
+    .transactions()
+    .forAccount(publicKey)
+    .call();
+  return transactions.records;
+};

@@ -12,7 +12,7 @@ import DeployContractButton from '@/components/shared/DeployContractButton';
 import ChartWidget from '@/components/shared/ChartWidget';
 
 const Overview = () => {
-  const { publicKey, balances } = useFreighterWallet();
+  const { publicKey, balances, transactions } = useFreighterWallet();
   const [isWalletConnected, setIsWalletConnected] =
     useState<boolean>(!!publicKey);
 
@@ -115,7 +115,7 @@ const Overview = () => {
               </Link>
             </div>
           </div>
-          <TableComponent />
+          <TableComponent transactions={transactions} />
         </Card>
         <Card className="w-[464px] mr-7 mb-7 ">
           <div className="w-[419px]">
