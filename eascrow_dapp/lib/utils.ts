@@ -10,7 +10,10 @@ import {
   rpc as SorobanRpc,
   BASE_FEE,
 } from '@stellar/stellar-sdk';
-import { AssembledTransaction } from '@stellar/stellar-sdk/minimal/contract';
+import { toast } from 'sonner';
+
+export const RPC_URL = 'https://soroban-testnet.stellar.org';
+export const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -138,7 +141,7 @@ export async function callWithSignedXDR(xdr: string) {
       txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND
     ) {
       txResponse = await provider.getTransaction(sendTx.hash);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
     if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
       return txResponse.returnValue;
@@ -214,3 +217,38 @@ export async function callWithSignedXDR(xdr: string) {
 //     .catch((error) => console.error(error));
 // };
 // test();
+
+/**
+ * Helper function to fetch the status of a transaction
+ * @param transactionHash - The hash of the transaction to fetch the status of
+ * @returns The status of the transaction
+ */
+export const fetchTransactionStatus = async (transactionHash: string) => {
+  const provider = new SorobanRpc.Server(RPC_URL, {
+    allowHttp: true,
+  });
+  const result = await provider.getTransaction(transactionHash);
+  return result;
+};
+
+/**
+ * Helper function to poll for the status of a transaction
+ * @param transactionHash - The hash of the transaction to poll for
+ * @param existingToastId - The id of the toast to update
+ */
+export const pollForTransactionStatus = async (
+  transactionHash: string,
+  existingToastId: string | number
+) => {
+  let txResponse = await fetchTransactionStatus(transactionHash);
+  while (txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
+    txResponse = await fetchTransactionStatus(transactionHash);
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+    toast.success('Contract deployed successfully', { id: existingToastId });
+  } else {
+    console.log('Error', txResponse);
+    toast.error('Contract deployment failed', { id: existingToastId });
+  }
+};

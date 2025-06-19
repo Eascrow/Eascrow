@@ -99,7 +99,7 @@ export default function SmartContractUI() {
         setEascrowContractAddress(newContractAddress);
 
         // Update price with data parsed from localStorage formData
-        setFormData((prevFormData) => ({
+        setFormData(prevFormData => ({
           ...prevFormData,
           sacAddress: newContractAddress,
           price: parsedFormData.price,

@@ -13,9 +13,8 @@ import ChartWidget from '@/components/shared/ChartWidget';
 
 const Overview = () => {
   const { publicKey } = useFreighterWallet();
-  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
-    !!publicKey
-  );
+  const [isWalletConnected, setIsWalletConnected] =
+    useState<boolean>(!!publicKey);
 
   // Track changes in `publicKey` and update `isWalletConnected`
   useEffect(() => {

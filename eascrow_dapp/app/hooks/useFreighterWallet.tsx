@@ -19,7 +19,7 @@ export const useFreighterWallet = () => {
   useEffect(() => {
     const fetchWalletData = () => {
       isConnected()
-        .then((connected) => {
+        .then(connected => {
           if (connected) {
             setHasFreighter(true);
             // Request access, if not already allowed
@@ -58,7 +58,7 @@ export const useFreighterWallet = () => {
 
   async function connect() {
     setAllowed()
-      .then((allowed) => {
+      .then(allowed => {
         if (allowed) {
           setIsFreighterAllowed(true);
           // Fetch network

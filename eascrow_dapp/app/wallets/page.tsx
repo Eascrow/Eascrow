@@ -8,9 +8,8 @@ import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 
 const Wallets = () => {
   const { publicKey, connect } = useFreighterWallet();
-  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
-    !!publicKey
-  );
+  const [isWalletConnected, setIsWalletConnected] =
+    useState<boolean>(!!publicKey);
 
   // Track changes in `publicKey` and update `isWalletConnected`
   useEffect(() => {

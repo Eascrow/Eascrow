@@ -9,9 +9,8 @@ import TableComponent from '@/components/shared/TableComponent';
 
 const Transactions = () => {
   const { publicKey } = useFreighterWallet();
-  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
-    !!publicKey
-  );
+  const [isWalletConnected, setIsWalletConnected] =
+    useState<boolean>(!!publicKey);
 
   // Track changes in `publicKey` and update `isWalletConnected`
   useEffect(() => {
