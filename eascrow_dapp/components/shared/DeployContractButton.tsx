@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import {
   Keypair,
+  Networks,
   rpc as SorobanRpc,
+  TransactionBuilder,
 } from '@stellar/stellar-sdk';
 import { Client as EascrowClient } from 'eascrow-sc';
+import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 
 
 
@@ -25,6 +28,7 @@ export default function DeployContractButton({
   const [isError, setIsError] = useState(false);
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
+  const { signXDR, publicKey } = useFreighterWallet();
 
   // MAINNET (TODO)
   // const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
@@ -43,6 +47,10 @@ export default function DeployContractButton({
     try {
       setLoading(true);
       setMessage('');
+      if(!publicKey) {
+        setMessage('Please connect your wallet');
+        return;
+      }
 
       // Assemble transaction
       const at = await EascrowClient.deploy({
@@ -51,16 +59,22 @@ export default function DeployContractButton({
         wasmHash,
         rpcUrl,
         networkPassphrase,
-        publicKey: signerKeypair.publicKey(),
+        publicKey,
       });
       const deployedContractId = at.result.options.contractId;
       // Sign transaction
-      at.built!.sign(signerKeypair);
+      
+      const freighterSignature = await signXDR(at.built!.toXDR());
+      let signedTxXdr = '';
+      if (freighterSignature && 'signedTxXdr' in freighterSignature) {
+        signedTxXdr = freighterSignature.signedTxXdr;
+      }
       // Submit
       const provider = new SorobanRpc.Server(rpcUrl, {
         allowHttp: true,
       });
-      await provider.sendTransaction(at.built!);
+      const result = await provider.sendTransaction(TransactionBuilder.fromXDR(signedTxXdr, Networks.TESTNET));
+      console.log(result);
       setNewContract(deployedContractId);
       localStorage.setItem('newContractAddress', deployedContractId);
       setMessage(`New Eascrow created at contract address: ${deployedContractId}`);
