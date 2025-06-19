@@ -9,12 +9,23 @@ import {
   signTransaction,
   setAllowed,
 } from '@stellar/freighter-api';
+import { Horizon } from '@stellar/stellar-sdk';
+import { getBalances } from '../../lib/utils';
 
 export const useFreighterWallet = () => {
   const [hasFreighter, setHasFreighter] = useState<boolean>(false);
   const [isFreighterAllowed, setIsFreighterAllowed] = useState<boolean>(false);
   const [publicKey, setPublicKey] = useState<string>();
   const [network, setNetwork] = useState<string>();
+  const [balances, setBalances] = useState<
+    Horizon.ServerApi.AccountRecord['balances']
+  >([]);
+
+  useEffect(() => {
+    if (publicKey) {
+      getBalances(publicKey).then(setBalances);
+    }
+  }, [publicKey]);
 
   useEffect(() => {
     const fetchWalletData = () => {
@@ -115,5 +126,6 @@ export const useFreighterWallet = () => {
     hasFreighter,
     isFreighterAllowed,
     connect,
+    balances,
   };
 };

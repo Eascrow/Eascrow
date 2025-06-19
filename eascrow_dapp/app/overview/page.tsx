@@ -12,7 +12,7 @@ import DeployContractButton from '@/components/shared/DeployContractButton';
 import ChartWidget from '@/components/shared/ChartWidget';
 
 const Overview = () => {
-  const { publicKey } = useFreighterWallet();
+  const { publicKey, balances } = useFreighterWallet();
   const [isWalletConnected, setIsWalletConnected] =
     useState<boolean>(!!publicKey);
 
@@ -20,6 +20,10 @@ const Overview = () => {
   useEffect(() => {
     setIsWalletConnected(!!publicKey);
   }, [publicKey]);
+
+  useEffect(() => {
+    console.log(balances);
+  }, [balances]);
 
   return (
     <div className="pt-[70px] pb-5 px-9">
@@ -69,10 +73,14 @@ const Overview = () => {
               </div>
               <div>
                 <p className="text-white font-bold">XLM</p>
-                <p className="text-xs">$3,425</p>
+                <p className="text-xs">
+                  {
+                    balances.find(balance => balance.asset_type === 'native')
+                      ?.balance
+                  }
+                </p>
               </div>
             </div>
-            <p className="text-xs text-white">38762.21</p>
           </div>
           <div className="h-[106px] flex flex-col justify-end space-y-4">
             <Link href="/wallets">

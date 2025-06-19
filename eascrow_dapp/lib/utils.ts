@@ -9,10 +9,13 @@ import {
   nativeToScVal,
   rpc as SorobanRpc,
   BASE_FEE,
+  Horizon,
 } from '@stellar/stellar-sdk';
 import { toast } from 'sonner';
 
 export const RPC_URL = 'https://soroban-testnet.stellar.org';
+export const HORIZON_URL = 'https://horizon-testnet.stellar.org';
+
 export const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 export function cn(...inputs: ClassValue[]) {
@@ -251,4 +254,12 @@ export const pollForTransactionStatus = async (
     console.log('Error', txResponse);
     toast.error('Contract deployment failed', { id: existingToastId });
   }
+};
+
+export const getBalances = async (
+  publicKey: string
+): Promise<Horizon.ServerApi.AccountRecord['balances']> => {
+  const horizon = new Horizon.Server(HORIZON_URL);
+  const account = await horizon.accounts().accountId(publicKey).call();
+  return account.balances;
 };
