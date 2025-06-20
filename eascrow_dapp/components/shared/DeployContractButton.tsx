@@ -40,8 +40,7 @@ export default function DeployContractButton({
   // (Eascrow Contract)
 
   // TODO: update le wasmHash
-  const wasmHash =
-    'ae4333761a7bcc80c8eddcb460e35bbbf21ca3bd68ea98c841b2df8ae6abbe71';
+  const wasmHash = process.env.NEXT_PUBLIC_EASCROW_WASM_HASH!;
 
   /**
    * Main function to deploy a contract
