@@ -13,10 +13,9 @@ import {
 } from '@stellar/stellar-sdk';
 import { toast } from 'sonner';
 
-export const RPC_URL = 'https://soroban-testnet.stellar.org';
-export const HORIZON_URL = 'https://horizon-testnet.stellar.org';
-
-export const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!;
+export const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL!;
+export const NETWORK_PASSPHRASE = process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE!;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -72,35 +71,21 @@ export function hexToBytes(hex: string): Uint8Array {
 }
 
 export async function getContractXDR(
-  address: string,
+  contractAddress: string,
   contractMethod: string,
-  caller: string,
+  caller: string, // Public key of the caller
   values: xdr.ScVal[]
 ) {
-  // MAINNET
-  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+  const provider = new SorobanRpc.Server(RPC_URL, {
     allowHttp: true,
   });
 
-  // TESTNET
-  // const provider = new SorobanRpc.Server(
-  //   'https://soroban-testnet.stellar.org',
-  //   { allowHttp: true }
-  // );
-
   const sourceAccount = await provider.getAccount(caller);
-  const contract = new Contract(address);
+  const contract = new Contract(contractAddress);
 
-  // TESTNET
-  // const transaction = new TransactionBuilder(sourceAccount, {
-  //   fee: BASE_FEE,
-  //   networkPassphrase: Networks.TESTNET,
-  // })
-
-  // MAINNET
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: Networks.PUBLIC,
+    networkPassphrase: NETWORK_PASSPHRASE,
   })
     .addOperation(contract.call(contractMethod, ...values))
     .setTimeout(30)
@@ -116,42 +101,18 @@ export async function getContractXDR(
   }
 }
 
-export async function callWithSignedXDR(xdr: string) {
-  // TESTNET
-  // const provider = new SorobanRpc.Server(
-  //   'https://soroban-testnet.stellar.org',
-  //   { allowHttp: true }
-  // );
-
-  // MAINNET
-  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+export async function submitSignedXDR(xdr: string): Promise<string> {
+  const provider = new SorobanRpc.Server(RPC_URL, {
     allowHttp: true,
   });
 
-  // TESTNET
-  // const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
-
-  // MAINNET
-  const transaction = TransactionBuilder.fromXDR(xdr, Networks.PUBLIC);
+  const transaction = TransactionBuilder.fromXDR(xdr, NETWORK_PASSPHRASE);
   const sendTx = await provider.sendTransaction(transaction);
 
   if (sendTx.errorResult) {
     throw new Error('Unable to send transaction');
   }
-  if (sendTx.status === 'PENDING') {
-    let txResponse = await provider.getTransaction(sendTx.hash);
-    while (
-      txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND
-    ) {
-      txResponse = await provider.getTransaction(sendTx.hash);
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
-      return txResponse.returnValue;
-    } else {
-      throw new Error('Unable to send transaction');
-    }
-  }
+  return sendTx.hash;
 }
 
 // export async function getTransactions(accountId: string) {
@@ -241,7 +202,11 @@ export const fetchTransactionStatus = async (transactionHash: string) => {
  */
 export const pollForTransactionStatus = async (
   transactionHash: string,
-  existingToastId: string | number
+  existingToastId: string | number,
+  messages?: {
+    success: string;
+    error: string;
+  }
 ) => {
   let txResponse = await fetchTransactionStatus(transactionHash);
   while (txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
@@ -249,10 +214,14 @@ export const pollForTransactionStatus = async (
     await new Promise(resolve => setTimeout(resolve, 300));
   }
   if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
-    toast.success('Contract deployed successfully', { id: existingToastId });
+    toast.success(messages?.success || 'Transaction successful', {
+      id: existingToastId,
+    });
   } else {
     console.log('Error', txResponse);
-    toast.error('Contract deployment failed', { id: existingToastId });
+    toast.error(messages?.error || 'Transaction failed', {
+      id: existingToastId,
+    });
   }
 };
 

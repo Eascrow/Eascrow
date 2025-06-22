@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import {
-  Keypair,
   Networks,
   rpc as SorobanRpc,
   TransactionBuilder,
 } from '@stellar/stellar-sdk';
-import { Client as EascrowClient } from 'eascrow-sc';
+import { Client as EascrowClient } from 'eascrow-contract';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import { toast } from 'sonner';
 import {
@@ -18,10 +17,6 @@ interface DeployContractButtonProps {
   disabled?: boolean;
 }
 
-const signerKeypair = Keypair.fromSecret(
-  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
-);
-
 export default function DeployContractButton({
   disabled,
 }: DeployContractButtonProps) {
@@ -30,17 +25,6 @@ export default function DeployContractButton({
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
   const { signXDR, publicKey } = useFreighterWallet();
-
-  // MAINNET (TODO)
-  // const contractId = 'CBGOAAK7IJT3HRGNWG7D7P2YKGVYESUP6E4GWDRZSH2CHQEW5Q2VPCP7';
-  // const adminAddress =
-  //   'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ';
-
-  // TESTNET
-  // (Eascrow Contract)
-
-  // TODO: update le wasmHash
-  const wasmHash = process.env.NEXT_PUBLIC_EASCROW_WASM_HASH!;
 
   /**
    * Main function to deploy a contract
@@ -57,21 +41,16 @@ export default function DeployContractButton({
         return;
       }
 
-      // Assemble transaction
-      const at = await EascrowClient.deploy(
-        {
-          admin: signerKeypair.publicKey(),
-        },
-        {
-          wasmHash,
-          rpcUrl: RPC_URL,
-          networkPassphrase: NETWORK_PASSPHRASE,
-          publicKey,
-        }
-      );
+      // Deploy contract instance (at: Assembled Transaction)
+      const at = await EascrowClient.deploy({
+        wasmHash: process.env.NEXT_PUBLIC_EASCROW_WASM_HASH!,
+        rpcUrl: RPC_URL,
+        networkPassphrase: NETWORK_PASSPHRASE,
+        publicKey, // <-- Wallet's public key
+      });
       const deployedContractId = at.result.options.contractId;
-      // Sign transaction
 
+      // Sign transaction
       const freighterSignature = await signXDR(at.built!.toXDR());
       let signedTxXdr = '';
       if (freighterSignature && 'signedTxXdr' in freighterSignature) {

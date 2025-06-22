@@ -3,6 +3,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import Layout from '@/components/shared/Layout';
 import IsOnlyAvailableOnDesktopAlert from '@/components/shared/IsOnlyAvailableOnDesktopAlert';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'Eascrow, when the trusted third is the blockchain',
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en">
       <body className={cn('min-h-screen font-sans antialiased bg-waves')}>
         <IsOnlyAvailableOnDesktopAlert>
+          <Toaster />
           <Layout>{children}</Layout>
         </IsOnlyAvailableOnDesktopAlert>
       </body>
