@@ -1,5 +1,4 @@
 #![no_std]
-
 use soroban_sdk::{contract, contractimpl, token, Address, ConversionError, Env, TryFromVal, Val};
 
 #[derive(Clone, Copy)]
@@ -9,7 +8,7 @@ pub enum DataKey {
     Buyer = 1, //Address
     Seller = 2, //Address
     AuthorizedAddress = 3, //Address
-    Price = 4, //i128
+    Price = 4, //u128
     IsInitialized = 5, //bool
 }
 
@@ -96,6 +95,9 @@ pub struct EascrowContract;
 
 #[contractimpl]
 impl EascrowContract {
+    pub fn __constructor(_env: Env) {
+    }
+
     // Called by eascrow platform every time a customer wants to buy something
     pub fn initialize(env: Env, buyer: Address, seller: Address, token: Address, authorized_address: Address, price: i128) {
         if get_is_initialized(&env) {

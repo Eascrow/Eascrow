@@ -3,12 +3,13 @@
 ## Security Issues
 
 ### 1. **CRITICAL**: Secret Key Exposed on Client Side
+
 - **Location**: `eascrow_dapp/app/openDetails/page.tsx` (lines 52-54)
-- **Issue**: Using `NEXT_PUBLIC_EASCROW_SECRET` environment variable exposes the secret key to the browser
-- **Code**: 
+- **Issue**: Using `NEXT_PUBLIC_ADMIN_SECRET_KEY` environment variable exposes the secret key to the browser
+- **Code**:
   ```typescript
   const signerKeypair = Keypair.fromSecret(
-    `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
+    `${process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY}`
   );
   ```
 - **Risk**: High - Secret keys should never be accessible on the client side
@@ -17,9 +18,10 @@
 ## Code Quality Issues
 
 ### 2. **Hardcoded Values Need to be Addressed**
+
 - **Location**: `eascrow_dapp/app/overview/page.tsx` (lines 59-77)
 - **Issue**: Hardcoded values in the UI that should be dynamic
-- **Code**: 
+- **Code**:
   ```typescript
   <p className="text-xs">$3,425</p>
   // ...
@@ -29,6 +31,7 @@
 - **Solution**: Implement proper data fetching for real-time values
 
 ### 3. **TableComponent with Static Data**
+
 - **Location**: `eascrow_dapp/components/shared/TableComponent.tsx` (entire component)
 - **Issue**: All table rows contain hardcoded mock data instead of dynamic content
 - **Code**:
@@ -43,12 +46,13 @@
   </TableRow>
   ```
 - **Priority**: Medium - Component should accept props or fetch real escrow data
-- **Solution**: 
+- **Solution**:
   - Add props interface for table data
   - Implement data fetching from escrow contracts
   - Add loading and empty states
 
 ### 4. **Non-Functional Form Elements**
+
 - **Location**: `eascrow_dapp/app/overview/page.tsx` (lines 232-247)
 - **Issue**: Textarea and Send button with no actual functionality
 - **Code**:
@@ -77,6 +81,7 @@
 - **Solution**: Either implement the functionality or remove the UI elements
 
 ### 5. **Contact Form Redirects to Production Site**
+
 - **Location**: `eascrow_dapp/app/contactForm/page.tsx` (lines 26-30)
 - **Issue**: Form redirects to eascrow.com instead of staying on localhost during development
 - **Code**:
@@ -101,20 +106,23 @@
   - Consider using Next.js API routes instead of external service
 
 ### 6. **Entire Settings Page is Non-Functional**
+
 - **Location**: `eascrow_dapp/app/parameters/page.tsx` (entire component)
 - **Issue**: Complete settings page with no actual functionality - just a UI mockup
 - **Problems**:
+
   ```typescript
   // Navigation links go nowhere
   <Link href={'#'} className="p-2 rounded hover:bg-background">
-  
+
   // Invalid form action
   <form action="htmlFor" className="space-y-8 mb-8">
-  
+
   // Buttons that do nothing
   <Button className="bg-transparent text-sm shadow-none">Delete</Button>
   <Button className="text-sm text-mintGreen bg-transparent shadow-none">Update</Button>
   ```
+
 - **Missing Functionality**:
   - No form submission handling
   - No state management for form inputs
@@ -123,7 +131,7 @@
   - No data persistence or API integration
   - No validation or error handling
 - **Priority**: High - Entire page is misleading to users
-- **Solution**: 
+- **Solution**:
   - Implement proper form handling with React state
   - Add navigation between settings sections
   - Connect to backend for data persistence
@@ -131,6 +139,7 @@
   - Or mark as "Coming Soon" if not ready
 
 ### 7. **"Buy $XLM" Button is Misleading**
+
 - **Location**: `eascrow_dapp/app/overview/page.tsx` (lines 83-89)
 - **Issue**: Button labeled "Buy $XLM" just redirects to homepage instead of providing purchase functionality
 - **Code**:
@@ -155,6 +164,7 @@
   - Add "Coming Soon" state
 
 ## Next Steps
+
 - [ ] Address critical security issue first
 - [ ] Implement server-side signing mechanism
 - [ ] Replace hardcoded values with dynamic data
