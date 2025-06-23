@@ -1,5 +1,31 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+This project uses type-safe environment variable validation with `@t3-oss/env-core`. Create a `.env.local` file in the root directory with the following variables:
+
+```bash
+# Stellar Network Configuration
+NEXT_PUBLIC_RPC_URL=https://soroban-testnet.stellar.org
+NEXT_PUBLIC_HORIZON_URL=https://horizon-testnet.stellar.org
+NEXT_PUBLIC_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
+
+# Smart Contract Configuration
+NEXT_PUBLIC_EASCROW_WASM_HASH=your_wasm_hash_here
+
+# Admin Configuration
+NEXT_PUBLIC_ADMIN_PUBLIC_KEY=your_admin_public_key_here
+NEXT_PUBLIC_ADMIN_SECRET_KEY=your_admin_secret_key_here
+
+# Token Configuration
+NEXT_PUBLIC_XLM_SAC=your_xlm_sac_address_here
+
+# Optional: Skip environment validation during build (for Docker builds)
+# SKIP_ENV_VALIDATION=true
+```
+
+**Note:** All environment variables are validated at build time. Missing or invalid variables will cause the build to fail.
+
 ## Getting Started
 
 First, run the development server:

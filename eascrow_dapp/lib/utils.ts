@@ -10,15 +10,20 @@ import {
   rpc as SorobanRpc,
   BASE_FEE,
   Horizon,
+  Keypair,
+  StrKey,
 } from '@stellar/stellar-sdk';
 import { toast } from 'sonner';
 
-export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL!;
-export const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL!;
-export const NETWORK_PASSPHRASE = process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE!;
-
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Checks if a string is a valid Stellar address
+ */
+export function isValidStellarAddress(address: string): boolean {
+  return StrKey.isValidEd25519PublicKey(address);
 }
 
 export const stringToSymbol = (val: string) => {
@@ -74,9 +79,11 @@ export async function getContractXDR(
   contractAddress: string,
   contractMethod: string,
   caller: string, // Public key of the caller
-  values: xdr.ScVal[]
+  values: xdr.ScVal[],
+  rpcUrl: string,
+  networkPassphrase: string
 ) {
-  const provider = new SorobanRpc.Server(RPC_URL, {
+  const provider = new SorobanRpc.Server(rpcUrl, {
     allowHttp: true,
   });
 
@@ -85,7 +92,7 @@ export async function getContractXDR(
 
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: NETWORK_PASSPHRASE,
+    networkPassphrase,
   })
     .addOperation(contract.call(contractMethod, ...values))
     .setTimeout(30)
@@ -101,12 +108,16 @@ export async function getContractXDR(
   }
 }
 
-export async function submitSignedXDR(xdr: string): Promise<string> {
-  const provider = new SorobanRpc.Server(RPC_URL, {
+export async function submitSignedXDR(
+  xdr: string,
+  rpcUrl: string,
+  networkPassphrase: string
+): Promise<string> {
+  const provider = new SorobanRpc.Server(rpcUrl, {
     allowHttp: true,
   });
 
-  const transaction = TransactionBuilder.fromXDR(xdr, NETWORK_PASSPHRASE);
+  const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase);
   const sendTx = await provider.sendTransaction(transaction);
 
   if (sendTx.errorResult) {
@@ -187,8 +198,11 @@ export async function submitSignedXDR(xdr: string): Promise<string> {
  * @param transactionHash - The hash of the transaction to fetch the status of
  * @returns The status of the transaction
  */
-export const fetchTransactionStatus = async (transactionHash: string) => {
-  const provider = new SorobanRpc.Server(RPC_URL, {
+export const fetchTransactionStatus = async (
+  transactionHash: string,
+  rpcUrl: string
+) => {
+  const provider = new SorobanRpc.Server(rpcUrl, {
     allowHttp: true,
   });
   const result = await provider.getTransaction(transactionHash);
@@ -203,15 +217,16 @@ export const fetchTransactionStatus = async (transactionHash: string) => {
 export const pollForTransactionStatus = async (
   transactionHash: string,
   existingToastId: string | number,
+  rpcUrl: string,
   messages?: {
     success: string;
     error: string;
   }
 ) => {
-  let txResponse = await fetchTransactionStatus(transactionHash);
+  let txResponse = await fetchTransactionStatus(transactionHash, rpcUrl);
   while (txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
-    txResponse = await fetchTransactionStatus(transactionHash);
-    await new Promise(resolve => setTimeout(resolve, 300));
+    txResponse = await fetchTransactionStatus(transactionHash, rpcUrl);
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
   if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
     toast.success(messages?.success || 'Transaction successful', {
@@ -226,17 +241,19 @@ export const pollForTransactionStatus = async (
 };
 
 export const getBalances = async (
-  publicKey: string
+  publicKey: string,
+  horizonUrl: string
 ): Promise<Horizon.ServerApi.AccountRecord['balances']> => {
-  const horizon = new Horizon.Server(HORIZON_URL);
+  const horizon = new Horizon.Server(horizonUrl);
   const account = await horizon.accounts().accountId(publicKey).call();
   return account.balances;
 };
 
 export const getTransactions = async (
-  publicKey: string
+  publicKey: string,
+  horizonUrl: string
 ): Promise<Horizon.ServerApi.TransactionRecord[]> => {
-  const horizon = new Horizon.Server(HORIZON_URL);
+  const horizon = new Horizon.Server(horizonUrl);
   const transactions = await horizon
     .transactions()
     .forAccount(publicKey)

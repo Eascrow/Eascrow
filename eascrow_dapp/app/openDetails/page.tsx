@@ -1,6 +1,6 @@
 'use client';
+import React, { useEffect, useReducer, useState } from 'react';
 import Image from 'next/image';
-import { useState, useEffect, useReducer } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,20 +14,9 @@ import {
   pollForTransactionStatus,
 } from '@/lib/utils';
 import Card from '@/components/shared/Card';
-import {
-  Keypair,
-  TransactionBuilder,
-  xdr,
-  rpc as SorobanRpc,
-  Horizon,
-  Operation,
-  BASE_FEE,
-  Account,
-  Contract,
-} from '@stellar/stellar-sdk';
-import { basicNodeSigner } from '@stellar/stellar-sdk/contract';
+import { Keypair, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { useRouter } from 'next/navigation';
-import { Client as ContractClient } from 'eascrow-contract';
+import { useStellar } from '../context/StellarContext';
 
 enum LoadingState {
   None = 'NONE',
@@ -50,7 +39,6 @@ interface FormData {
   sacAddress: string;
   buyerAddress: string;
   sellerAddress: string;
-  authorizedAddress: string;
   tokenAddress: string;
   email?: string;
   service?: string;
@@ -77,6 +65,8 @@ export default function SmartContractUI() {
     LoadingState.None
   );
   const { signXDR, publicKey } = useFreighterWallet();
+  const { adminPublicKey, adminSecretKey, networkPassphrase, getSAC, rpcUrl } =
+    useStellar();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
   const [eascrowContractAddress, setEascrowContractAddress] = useState<
     string | null
@@ -86,8 +76,7 @@ export default function SmartContractUI() {
     sacAddress: '',
     buyerAddress: '',
     sellerAddress: '',
-    authorizedAddress: process.env.NEXT_PUBLIC_ADMIN_PUBLIC_KEY!,
-    tokenAddress: process.env.NEXT_PUBLIC_XLM_SAC!,
+    tokenAddress: getSAC(),
     price: 0,
   });
 
@@ -158,6 +147,15 @@ export default function SmartContractUI() {
     }
   };
 
+  const handleSwitchAddresses = () => {
+    setFormData(prev => ({
+      ...prev,
+      buyerAddress: prev.sellerAddress,
+      sellerAddress: prev.buyerAddress,
+    }));
+    toast.success('Addresses switched successfully');
+  };
+
   const handleInitialize = async () => {
     try {
       if (!publicKey) {
@@ -177,27 +175,35 @@ export default function SmartContractUI() {
         );
         return;
       }
-
+      if (!adminPublicKey) {
+        toast.error('Environment mismatch. Admin public key is not set');
+        return;
+      }
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
         addressToScVal(formData.tokenAddress),
-        addressToScVal(formData.authorizedAddress),
+        addressToScVal(adminPublicKey!),
         numberToi128(Number(formData.price)),
       ];
-
       const xdr = await getContractXDR(
         formData.sacAddress,
         'initialize',
         publicKey!,
-        contractParams
+        contractParams,
+        rpcUrl!,
+        networkPassphrase!
       );
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        const txHash = await submitSignedXDR(signedXDR.signedTxXdr);
+        const txHash = await submitSignedXDR(
+          signedXDR.signedTxXdr,
+          rpcUrl!,
+          networkPassphrase!
+        );
         const toastId = toast.loading('Initializing contract...');
-        pollForTransactionStatus(txHash, toastId, {
+        pollForTransactionStatus(txHash, toastId, rpcUrl!, {
           success: 'Contract initialized successfully',
           error: 'Failed to initialize contract',
         });
@@ -238,14 +244,20 @@ export default function SmartContractUI() {
         formData.sacAddress,
         'fund',
         publicKey!, // Contract's caller
-        contractParams
+        contractParams,
+        rpcUrl!,
+        networkPassphrase!
       );
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        const txHash = await submitSignedXDR(signedXDR.signedTxXdr);
+        const txHash = await submitSignedXDR(
+          signedXDR.signedTxXdr,
+          rpcUrl!,
+          networkPassphrase!
+        );
         const toastId = toast.loading('Funding in progress...');
-        pollForTransactionStatus(txHash, toastId);
+        pollForTransactionStatus(txHash, toastId, rpcUrl!);
       } else {
         toast.error('Failed to sign the XDR. The response is undefined.');
       }
@@ -265,32 +277,41 @@ export default function SmartContractUI() {
       });
       const contractParams: xdr.ScVal[] = [];
 
+      if (!adminPublicKey) {
+        toast.error('Environment mismatch. Admin public key is not set');
+        return;
+      }
+
+      if (!adminSecretKey) {
+        toast.error('Environment mismatch. Admin secret key is not set');
+        return;
+      }
+
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
        */
       const xdr = await getContractXDR(
-        formData.sacAddress,
+        formData.sacAddress, // Contract address
         'release_funds',
-        formData.authorizedAddress!, // Admin
-        contractParams //
+        adminPublicKey!, // Admin
+        contractParams, //
+        rpcUrl!,
+        networkPassphrase!
       );
       // Create transaction based on XDR
-      const transaction = TransactionBuilder.fromXDR(
-        xdr,
-        process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE!
-      );
-      const signerKeypair = Keypair.fromSecret(
-        `${process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY}`
-      );
-      // Add signature with secure admin key
-      transaction.sign(signerKeypair);
+      const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase!);
 
+      transaction.sign(Keypair.fromSecret(adminSecretKey!));
       // Convert transaction into signed XDR
       const signedXDR = transaction.toXDR();
       if (signedXDR) {
-        const txHash = await submitSignedXDR(signedXDR);
+        const txHash = await submitSignedXDR(
+          signedXDR,
+          rpcUrl!,
+          networkPassphrase!
+        );
         const toastId = toast.loading('Releasing funds...');
-        pollForTransactionStatus(txHash, toastId);
+        pollForTransactionStatus(txHash, toastId, rpcUrl!);
       } else {
         toast.error('Failed to sign the XDR. The response is undefined.');
       }
@@ -382,6 +403,24 @@ export default function SmartContractUI() {
                   Use My Wallet
                 </Button>
               </div>
+
+              {/* Switch Button */}
+              <div className="flex items-center justify-center lg:self-center lg:mx-4 my-4 lg:my-0">
+                <Button
+                  onClick={handleSwitchAddresses}
+                  className="bg-transparent border border-mintGreen text-mintGreen hover:bg-mintGreen hover:text-background transition-colors duration-200 p-2 rounded-full"
+                  title="Switch addresses"
+                >
+                  <Image
+                    src="/icons/arrow-swapp.png"
+                    alt="Switch addresses"
+                    width="20"
+                    height="20"
+                    priority
+                  />
+                </Button>
+              </div>
+
               <div className="space-y-2 min-w-[40%]">
                 <Label htmlFor="sellerAddress" className="text-white text-sm">
                   Service provider Address

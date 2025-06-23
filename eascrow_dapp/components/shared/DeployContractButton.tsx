@@ -1,3 +1,4 @@
+'use client';
 import { useState } from 'react';
 import {
   Networks,
@@ -7,11 +8,8 @@ import {
 import { Client as EascrowClient } from 'eascrow-contract';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import { toast } from 'sonner';
-import {
-  pollForTransactionStatus,
-  RPC_URL,
-  NETWORK_PASSPHRASE,
-} from '@/lib/utils';
+import { pollForTransactionStatus } from '@/lib/utils';
+import { useStellar } from '@/app/context/StellarContext';
 
 interface DeployContractButtonProps {
   disabled?: boolean;
@@ -25,6 +23,7 @@ export default function DeployContractButton({
   const [message, setMessage] = useState('');
   const [newContract, setNewContract] = useState('');
   const { signXDR, publicKey } = useFreighterWallet();
+  const { rpcUrl, networkPassphrase, wasmHash } = useStellar();
 
   /**
    * Main function to deploy a contract
@@ -43,9 +42,9 @@ export default function DeployContractButton({
 
       // Deploy contract instance (at: Assembled Transaction)
       const at = await EascrowClient.deploy({
-        wasmHash: process.env.NEXT_PUBLIC_EASCROW_WASM_HASH!,
-        rpcUrl: RPC_URL,
-        networkPassphrase: NETWORK_PASSPHRASE,
+        wasmHash: wasmHash!,
+        rpcUrl: rpcUrl!,
+        networkPassphrase: networkPassphrase!,
         publicKey, // <-- Wallet's public key
       });
       const deployedContractId = at.result.options.contractId;
@@ -57,7 +56,7 @@ export default function DeployContractButton({
         signedTxXdr = freighterSignature.signedTxXdr;
       }
       // Submit
-      const provider = new SorobanRpc.Server(RPC_URL, {
+      const provider = new SorobanRpc.Server(rpcUrl!, {
         allowHttp: true,
       });
       const result = await provider.sendTransaction(
@@ -74,10 +73,10 @@ export default function DeployContractButton({
       setMessage(
         `New Eascrow created at contract address: ${deployedContractId}`
       );
-      console.log('result: ', result);
-      console.log('result.hash: ', result.hash);
-      console.log('result.status: ', result.status);
-      pollForTransactionStatus(result.hash, toastId);
+      pollForTransactionStatus(result.hash, toastId, rpcUrl!, {
+        success: 'Contract deployment successful',
+        error: 'Contract deployment failed',
+      });
     } catch (error: unknown) {
       if (error instanceof Error) {
         setMessage(`Error: ${error.message}`);
