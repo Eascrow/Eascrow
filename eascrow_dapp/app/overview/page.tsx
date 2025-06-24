@@ -12,10 +12,9 @@ import DeployContractButton from '@/components/shared/DeployContractButton';
 import ChartWidget from '@/components/shared/ChartWidget';
 
 const Overview = () => {
-  const { publicKey } = useFreighterWallet();
-  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
-    !!publicKey
-  );
+  const { publicKey, balances, transactions } = useFreighterWallet();
+  const [isWalletConnected, setIsWalletConnected] =
+    useState<boolean>(!!publicKey);
 
   // Track changes in `publicKey` and update `isWalletConnected`
   useEffect(() => {
@@ -70,10 +69,14 @@ const Overview = () => {
               </div>
               <div>
                 <p className="text-white font-bold">XLM</p>
-                <p className="text-xs">$3,425</p>
+                <p className="text-xs">
+                  {
+                    balances.find(balance => balance.asset_type === 'native')
+                      ?.balance
+                  }
+                </p>
               </div>
             </div>
-            <p className="text-xs text-white">38762.21</p>
           </div>
           <div className="h-[106px] flex flex-col justify-end space-y-4">
             <Link href="/wallets">
@@ -108,7 +111,7 @@ const Overview = () => {
               </Link>
             </div>
           </div>
-          <TableComponent />
+          <TableComponent transactions={transactions} />
         </Card>
         <Card className="w-[464px] mr-7 mb-7 ">
           <div className="w-[419px]">

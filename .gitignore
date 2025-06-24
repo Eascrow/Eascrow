@@ -1,1 +1,5 @@
 *.sqlite
+
+.env
+
+eascrow_dapp/.env

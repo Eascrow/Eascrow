@@ -1,24 +1,22 @@
 'use client';
+import React, { useEffect, useReducer, useState } from 'react';
 import Image from 'next/image';
-import { useState, useEffect, useReducer } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import {
   addressToScVal,
-  callWithSignedXDR,
+  submitSignedXDR,
   getContractXDR,
   numberToi128,
+  pollForTransactionStatus,
 } from '@/lib/utils';
 import Card from '@/components/shared/Card';
-import {
-  Keypair,
-  Networks,
-  TransactionBuilder,
-  xdr,
-} from '@stellar/stellar-sdk';
+import { Keypair, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { useRouter } from 'next/navigation';
+import { useStellar } from '../context/StellarContext';
 
 enum LoadingState {
   None = 'NONE',
@@ -41,17 +39,12 @@ interface FormData {
   sacAddress: string;
   buyerAddress: string;
   sellerAddress: string;
-  authorizedAddress: string;
   tokenAddress: string;
   email?: string;
   service?: string;
   terms?: string;
   price: number;
 }
-
-const signerKeypair = Keypair.fromSecret(
-  `${process.env.NEXT_PUBLIC_EASCROW_SECRET}`
-);
 
 // Manage Button state when using smart contract functions
 const loadingReducer = (state: LoadingState, action: Action): LoadingState => {
@@ -71,7 +64,9 @@ export default function SmartContractUI() {
     loadingReducer,
     LoadingState.None
   );
-  const { signXDR } = useFreighterWallet();
+  const { signXDR, publicKey } = useFreighterWallet();
+  const { adminPublicKey, adminSecretKey, networkPassphrase, getSAC, rpcUrl } =
+    useStellar();
   const [fetchedData, setFetchedData] = useState<FormData | null>(null);
   const [eascrowContractAddress, setEascrowContractAddress] = useState<
     string | null
@@ -81,9 +76,7 @@ export default function SmartContractUI() {
     sacAddress: '',
     buyerAddress: '',
     sellerAddress: '',
-    authorizedAddress:
-      'GC2C6IPK5LPI56AKOX4H3SKJW5JVVWLGLMTP2FPKAH35HN2RJANHIWIJ',
-    tokenAddress: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+    tokenAddress: getSAC(),
     price: 0,
   });
 
@@ -99,7 +92,7 @@ export default function SmartContractUI() {
         setEascrowContractAddress(newContractAddress);
 
         // Update price with data parsed from localStorage formData
-        setFormData((prevFormData) => ({
+        setFormData(prevFormData => ({
           ...prevFormData,
           sacAddress: newContractAddress,
           price: parsedFormData.price,
@@ -111,43 +104,117 @@ export default function SmartContractUI() {
   }, [eascrowContractAddress]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const newFormData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newFormData);
+
+    // Check if buyer and seller addresses are the same
+    if (e.target.name === 'buyerAddress' || e.target.name === 'sellerAddress') {
+      if (
+        newFormData.buyerAddress &&
+        newFormData.sellerAddress &&
+        newFormData.buyerAddress === newFormData.sellerAddress
+      ) {
+        toast.warning('Buyer and seller addresses should not be the same');
+      }
+    }
+  };
+
+  const setAsBuyer = () => {
+    if (publicKey) {
+      const newBuyerAddress = publicKey;
+      setFormData(prev => ({ ...prev, buyerAddress: newBuyerAddress }));
+
+      // Check if the new buyer address matches the seller address
+      if (newBuyerAddress === formData.sellerAddress) {
+        toast.warning('Buyer and seller addresses should not be the same');
+      }
+    } else {
+      toast.error('Please connect your wallet first');
+    }
+  };
+
+  const setAsSeller = () => {
+    if (publicKey) {
+      const newSellerAddress = publicKey;
+      setFormData(prev => ({ ...prev, sellerAddress: newSellerAddress }));
+
+      // Check if the new seller address matches the buyer address
+      if (newSellerAddress === formData.buyerAddress) {
+        toast.warning('Buyer and seller addresses should not be the same');
+      }
+    } else {
+      toast.error('Please connect your wallet first');
+    }
+  };
+
+  const handleSwitchAddresses = () => {
+    setFormData(prev => ({
+      ...prev,
+      buyerAddress: prev.sellerAddress,
+      sellerAddress: prev.buyerAddress,
+    }));
+    toast.success('Addresses switched successfully');
   };
 
   const handleInitialize = async () => {
     try {
+      if (!publicKey) {
+        toast.error('Please connect your wallet first');
+        return;
+      }
+
       dispatch({
         type: ActionType.SET_LOADING,
         payload: LoadingState.Initialize,
       });
 
+      // Validate required fields
+      if (!formData.buyerAddress || !formData.sellerAddress) {
+        alert(
+          'Please fill in both Customer Address and Service Provider Address'
+        );
+        return;
+      }
+      if (!adminPublicKey) {
+        toast.error('Environment mismatch. Admin public key is not set');
+        return;
+      }
       const contractParams = [
         addressToScVal(formData.buyerAddress),
         addressToScVal(formData.sellerAddress),
         addressToScVal(formData.tokenAddress),
-        addressToScVal(formData.authorizedAddress),
+        addressToScVal(adminPublicKey!),
         numberToi128(Number(formData.price)),
       ];
-
-      /**
-       * This contract call will send the Assets to the Ticket Sale Contract
-       */
       const xdr = await getContractXDR(
         formData.sacAddress,
         'initialize',
-        formData.buyerAddress, // contract caller
-        contractParams
+        publicKey!,
+        contractParams,
+        rpcUrl!,
+        networkPassphrase!
       );
 
       const signedXDR = await signXDR(xdr);
-
       if (signedXDR && signedXDR.signedTxXdr) {
-        await callWithSignedXDR(signedXDR.signedTxXdr);
+        const txHash = await submitSignedXDR(
+          signedXDR.signedTxXdr,
+          rpcUrl!,
+          networkPassphrase!
+        );
+        const toastId = toast.loading('Initializing contract...');
+        pollForTransactionStatus(txHash, toastId, rpcUrl!, {
+          success: 'Contract initialized successfully',
+          error: 'Failed to initialize contract',
+        });
       } else {
-        console.error('Failed to sign the XDR. The response is undefined.');
+        toast.error('Failed to sign the XDR. The response is undefined.');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Initialize error:', error);
+      toast.error(
+        'Failed to initialize contract. Please check the console for details.'
+      );
     } finally {
       dispatch({ type: ActionType.RESET_LOADING });
     }
@@ -155,6 +222,12 @@ export default function SmartContractUI() {
 
   const handleFund = async () => {
     try {
+      // Verify that the signing account is the buyer
+      if (publicKey !== formData.buyerAddress) {
+        toast.error('Only the buyer can fund the contract');
+        return;
+      }
+
       dispatch({
         type: ActionType.SET_LOADING,
         payload: LoadingState.Fund,
@@ -170,17 +243,26 @@ export default function SmartContractUI() {
       const xdr = await getContractXDR(
         formData.sacAddress,
         'fund',
-        formData.buyerAddress, // Contract's caller
-        contractParams
+        publicKey!, // Contract's caller
+        contractParams,
+        rpcUrl!,
+        networkPassphrase!
       );
 
       const signedXDR = await signXDR(xdr);
       if (signedXDR && signedXDR.signedTxXdr) {
-        await callWithSignedXDR(signedXDR.signedTxXdr);
+        const txHash = await submitSignedXDR(
+          signedXDR.signedTxXdr,
+          rpcUrl!,
+          networkPassphrase!
+        );
+        const toastId = toast.loading('Funding in progress...');
+        pollForTransactionStatus(txHash, toastId, rpcUrl!);
       } else {
-        console.error('Failed to sign the XDR. The response is undefined.');
+        toast.error('Failed to sign the XDR. The response is undefined.');
       }
     } catch (error) {
+      toast.error('Failed to fund. Please check the console for details.');
       console.error(error);
     } finally {
       dispatch({ type: ActionType.RESET_LOADING });
@@ -195,26 +277,48 @@ export default function SmartContractUI() {
       });
       const contractParams: xdr.ScVal[] = [];
 
+      if (!adminPublicKey) {
+        toast.error('Environment mismatch. Admin public key is not set');
+        return;
+      }
+
+      if (!adminSecretKey) {
+        toast.error('Environment mismatch. Admin secret key is not set');
+        return;
+      }
+
       /**
        * This contract call will send the Assets to the Ticket Sale Contract
        */
       const xdr = await getContractXDR(
-        formData.sacAddress,
+        formData.sacAddress, // Contract address
         'release_funds',
-        formData.authorizedAddress, // Contract's caller
-        contractParams //
+        adminPublicKey!, // Admin
+        contractParams, //
+        rpcUrl!,
+        networkPassphrase!
       );
       // Create transaction based on XDR
-      const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
+      const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase!);
 
-      // Add signature with secure admin key
-      transaction.sign(signerKeypair);
-
+      transaction.sign(Keypair.fromSecret(adminSecretKey!));
       // Convert transaction into signed XDR
       const signedXDR = transaction.toXDR();
-      await callWithSignedXDR(signedXDR);
-      router.push('/');
+      if (signedXDR) {
+        const txHash = await submitSignedXDR(
+          signedXDR,
+          rpcUrl!,
+          networkPassphrase!
+        );
+        const toastId = toast.loading('Releasing funds...');
+        pollForTransactionStatus(txHash, toastId, rpcUrl!);
+      } else {
+        toast.error('Failed to sign the XDR. The response is undefined.');
+      }
     } catch (error) {
+      toast.error(
+        'Failed to release funds. Please check the console for details.'
+      );
       console.error(error);
     } finally {
       dispatch({ type: ActionType.RESET_LOADING });
@@ -246,7 +350,7 @@ export default function SmartContractUI() {
                   Smart Contract Address
                 </Label>
                 <Input
-                  value={formData.sacAddress || ''}
+                  value={formData.sacAddress}
                   className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
                   id="sacAddress"
                   name="sacAddress"
@@ -272,7 +376,7 @@ export default function SmartContractUI() {
                   </span>
                 </Label>
                 <Input
-                  value={formData.tokenAddress || ''}
+                  value={formData.tokenAddress}
                   className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
                   id="tokenAddress"
                   name="tokenAddress"
@@ -286,22 +390,54 @@ export default function SmartContractUI() {
                   Customer Address
                 </Label>
                 <Input
+                  value={formData.buyerAddress}
                   className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
                   id="buyerAddress"
                   name="buyerAddress"
                   onChange={handleInputChange}
                 />
+                <Button
+                  onClick={setAsBuyer}
+                  className="mt-2 bg-mintGreen text-background text-sm font-bold"
+                >
+                  Use My Wallet
+                </Button>
               </div>
+
+              {/* Switch Button */}
+              <div className="flex items-center justify-center lg:self-center lg:mx-4 my-4 lg:my-0">
+                <Button
+                  onClick={handleSwitchAddresses}
+                  className="bg-transparent border border-mintGreen text-mintGreen hover:bg-mintGreen hover:text-background transition-colors duration-200 p-2 rounded-full"
+                  title="Switch addresses"
+                >
+                  <Image
+                    src="/icons/arrow-swapp.png"
+                    alt="Switch addresses"
+                    width="20"
+                    height="20"
+                    priority
+                  />
+                </Button>
+              </div>
+
               <div className="space-y-2 min-w-[40%]">
                 <Label htmlFor="sellerAddress" className="text-white text-sm">
                   Service provider Address
                 </Label>
                 <Input
+                  value={formData.sellerAddress}
                   className="mt-2.5 py-[22px] px-[14px] border border-[#2c303d]"
                   id="sellerAddress"
                   name="sellerAddress"
                   onChange={handleInputChange}
                 />
+                <Button
+                  onClick={setAsSeller}
+                  className="mt-2 bg-mintGreen text-background text-sm font-bold"
+                >
+                  Use My Wallet
+                </Button>
               </div>
             </div>
             <div className=" w-full flex justify-start lg:justify-center">
@@ -314,8 +450,8 @@ export default function SmartContractUI() {
                   id="price"
                   name="price"
                   type="number"
-                  value={formData.price || ''}
-                  readOnly
+                  value={formData.price}
+                  onChange={handleInputChange}
                 />
               </div>
             </div>

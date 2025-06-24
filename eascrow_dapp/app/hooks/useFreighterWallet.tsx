@@ -9,17 +9,40 @@ import {
   signTransaction,
   setAllowed,
 } from '@stellar/freighter-api';
+import { Horizon } from '@stellar/stellar-sdk';
+import { getBalances, getTransactions } from '../../lib/utils';
+import { useStellar } from '../context/StellarContext';
 
 export const useFreighterWallet = () => {
   const [hasFreighter, setHasFreighter] = useState<boolean>(false);
   const [isFreighterAllowed, setIsFreighterAllowed] = useState<boolean>(false);
   const [publicKey, setPublicKey] = useState<string>();
-  const [network, setNetwork] = useState<string>();
+  const { setNetwork: setStellarNetwork, horizonUrl } = useStellar();
+  const [transactions, setTransactions] = useState<
+    Horizon.ServerApi.TransactionRecord[]
+  >([]);
+  const [balances, setBalances] = useState<
+    Horizon.ServerApi.AccountRecord['balances']
+  >([]);
+
+  function fetchWalletData() {
+    if (publicKey && horizonUrl) {
+      getBalances(publicKey, horizonUrl).then(setBalances);
+      getTransactions(publicKey, horizonUrl).then(setTransactions);
+    }
+  }
+
+  useEffect(() => {
+    fetchWalletData();
+    const intervalId = setInterval(fetchWalletData, 5000); // Polling every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, [publicKey, horizonUrl]);
 
   useEffect(() => {
     const fetchWalletData = () => {
       isConnected()
-        .then((connected) => {
+        .then(connected => {
           if (connected) {
             setHasFreighter(true);
             // Request access, if not already allowed
@@ -30,7 +53,9 @@ export const useFreighterWallet = () => {
                   setIsFreighterAllowed(true);
                   // Fetch network
                   getNetwork()
-                    .then(({ network }) => setNetwork(network))
+                    .then(({ network }) => {
+                      setStellarNetwork(network);
+                    })
                     .catch(() => console.error('Error getting network'));
                   // Fetch public key
                   getAddress()
@@ -54,16 +79,16 @@ export const useFreighterWallet = () => {
     const intervalId = setInterval(fetchWalletData, 5000); // Polling every 5 seconds
 
     return () => clearInterval(intervalId); // Cleanup interval on component unmount
-  }, []);
+  }, [setStellarNetwork]);
 
   async function connect() {
     setAllowed()
-      .then((allowed) => {
+      .then(allowed => {
         if (allowed) {
           setIsFreighterAllowed(true);
           // Fetch network
           getNetwork()
-            .then(({ network }) => setNetwork(network))
+            .then(({ network }) => setStellarNetwork(network))
             .catch(() => console.error('Error getting network'));
           // Fetch public key
           requestAccess()
@@ -95,7 +120,7 @@ export const useFreighterWallet = () => {
         const { address: publicKey } = result;
         setPublicKey(publicKey);
         const { networkPassphrase, network } = await getNetwork();
-        setNetwork(network);
+        setStellarNetwork(network);
         return signTransaction(xdr, {
           address: publicKey as string,
           networkPassphrase,
@@ -110,10 +135,11 @@ export const useFreighterWallet = () => {
 
   return {
     publicKey,
-    network,
     signXDR,
     hasFreighter,
     isFreighterAllowed,
     connect,
+    balances,
+    transactions,
   };
 };

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Sidebar from './Sidebar';
 import { Button } from '@/components/ui/button';
 import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
+import { useStellar } from '../../app/context/StellarContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { publicKey, connect, hasFreighter } = useFreighterWallet();
+  const { network } = useStellar();
 
   return (
     <div>
@@ -18,7 +20,9 @@ const Layout = ({ children }: LayoutProps) => {
         <Sidebar />
         <div className="w-full">
           <header className="flex items-center justify-between h-[78px] py-[15px] px-[31px] bg-background">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <h1 className="text-3xl font-bold">
+              Dashboard {network ? `(${network})` : 'No network selected'}
+            </h1>
             <div className="flex items-center">
               {!hasFreighter && (
                 <p className="text-red-500">Freighter Wallet not detected</p>
@@ -40,7 +44,7 @@ const Layout = ({ children }: LayoutProps) => {
                     priority
                   />
                   <p className="max-w-80 pt-1 truncate text-mintGreen">
-                    Connected:{' '}
+                    Connected to {network}:
                     {publicKey
                       ? `${publicKey.slice(0, 3)}...${publicKey.slice(-3)}`
                       : ''}

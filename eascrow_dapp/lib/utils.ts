@@ -7,12 +7,23 @@ import {
   TransactionBuilder,
   xdr,
   nativeToScVal,
-  SorobanRpc,
+  rpc as SorobanRpc,
   BASE_FEE,
+  Horizon,
+  Keypair,
+  StrKey,
 } from '@stellar/stellar-sdk';
+import { toast } from 'sonner';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Checks if a string is a valid Stellar address
+ */
+export function isValidStellarAddress(address: string): boolean {
+  return StrKey.isValidEd25519PublicKey(address);
 }
 
 export const stringToSymbol = (val: string) => {
@@ -65,35 +76,23 @@ export function hexToBytes(hex: string): Uint8Array {
 }
 
 export async function getContractXDR(
-  address: string,
+  contractAddress: string,
   contractMethod: string,
-  caller: string,
-  values: xdr.ScVal[]
+  caller: string, // Public key of the caller
+  values: xdr.ScVal[],
+  rpcUrl: string,
+  networkPassphrase: string
 ) {
-  // MAINNET
-  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+  const provider = new SorobanRpc.Server(rpcUrl, {
     allowHttp: true,
   });
 
-  // TESTNET
-  // const provider = new SorobanRpc.Server(
-  //   'https://soroban-testnet.stellar.org',
-  //   { allowHttp: true }
-  // );
-
   const sourceAccount = await provider.getAccount(caller);
-  const contract = new Contract(address);
+  const contract = new Contract(contractAddress);
 
-  // TESTNET
-  // const transaction = new TransactionBuilder(sourceAccount, {
-  //   fee: BASE_FEE,
-  //   networkPassphrase: Networks.TESTNET,
-  // })
-
-  // MAINNET
   const transaction = new TransactionBuilder(sourceAccount, {
     fee: BASE_FEE,
-    networkPassphrase: Networks.PUBLIC,
+    networkPassphrase,
   })
     .addOperation(contract.call(contractMethod, ...values))
     .setTimeout(30)
@@ -109,42 +108,22 @@ export async function getContractXDR(
   }
 }
 
-export async function callWithSignedXDR(xdr: string) {
-  // TESTNET
-  // const provider = new SorobanRpc.Server(
-  //   'https://soroban-testnet.stellar.org',
-  //   { allowHttp: true }
-  // );
-
-  // MAINNET
-  const provider = new SorobanRpc.Server('https://mainnet.sorobanrpc.com', {
+export async function submitSignedXDR(
+  xdr: string,
+  rpcUrl: string,
+  networkPassphrase: string
+): Promise<string> {
+  const provider = new SorobanRpc.Server(rpcUrl, {
     allowHttp: true,
   });
 
-  // TESTNET
-  // const transaction = TransactionBuilder.fromXDR(xdr, Networks.TESTNET);
-
-  // MAINNET
-  const transaction = TransactionBuilder.fromXDR(xdr, Networks.PUBLIC);
+  const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase);
   const sendTx = await provider.sendTransaction(transaction);
 
   if (sendTx.errorResult) {
     throw new Error('Unable to send transaction');
   }
-  if (sendTx.status === 'PENDING') {
-    let txResponse = await provider.getTransaction(sendTx.hash);
-    while (
-      txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND
-    ) {
-      txResponse = await provider.getTransaction(sendTx.hash);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
-      return txResponse.returnValue;
-    } else {
-      throw new Error('Unable to send transaction');
-    }
-  }
+  return sendTx.hash;
 }
 
 // export async function getTransactions(accountId: string) {
@@ -213,3 +192,71 @@ export async function callWithSignedXDR(xdr: string) {
 //     .catch((error) => console.error(error));
 // };
 // test();
+
+/**
+ * Helper function to fetch the status of a transaction
+ * @param transactionHash - The hash of the transaction to fetch the status of
+ * @returns The status of the transaction
+ */
+export const fetchTransactionStatus = async (
+  transactionHash: string,
+  rpcUrl: string
+) => {
+  const provider = new SorobanRpc.Server(rpcUrl, {
+    allowHttp: true,
+  });
+  const result = await provider.getTransaction(transactionHash);
+  return result;
+};
+
+/**
+ * Helper function to poll for the status of a transaction
+ * @param transactionHash - The hash of the transaction to poll for
+ * @param existingToastId - The id of the toast to update
+ */
+export const pollForTransactionStatus = async (
+  transactionHash: string,
+  existingToastId: string | number,
+  rpcUrl: string,
+  messages?: {
+    success: string;
+    error: string;
+  }
+) => {
+  let txResponse = await fetchTransactionStatus(transactionHash, rpcUrl);
+  while (txResponse.status === SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
+    txResponse = await fetchTransactionStatus(transactionHash, rpcUrl);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  if (txResponse.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+    toast.success(messages?.success || 'Transaction successful', {
+      id: existingToastId,
+    });
+  } else {
+    console.log('Error', txResponse);
+    toast.error(messages?.error || 'Transaction failed', {
+      id: existingToastId,
+    });
+  }
+};
+
+export const getBalances = async (
+  publicKey: string,
+  horizonUrl: string
+): Promise<Horizon.ServerApi.AccountRecord['balances']> => {
+  const horizon = new Horizon.Server(horizonUrl);
+  const account = await horizon.accounts().accountId(publicKey).call();
+  return account.balances;
+};
+
+export const getTransactions = async (
+  publicKey: string,
+  horizonUrl: string
+): Promise<Horizon.ServerApi.TransactionRecord[]> => {
+  const horizon = new Horizon.Server(horizonUrl);
+  const transactions = await horizon
+    .transactions()
+    .forAccount(publicKey)
+    .call();
+  return transactions.records;
+};

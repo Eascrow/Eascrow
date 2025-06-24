@@ -19,7 +19,7 @@ const Sidebar = () => {
           <Link href="/">
             <li className=" flex h-[34px] py-[7px] px-[8px] gap-x-2 rounded-md hover:text-white hover:bg-backgroundHover">
               <Image
-                src="/icons/3dcube.png"
+                src="/icons/house.png"
                 alt="Overview link"
                 width="20"
                 height="20"
@@ -62,6 +62,18 @@ const Sidebar = () => {
                 priority
               />
               Chart
+            </li>
+          </Link>
+          <Link href="/openDetails">
+            <li className=" flex h-[34px] py-[7px] px-[8px] gap-x-2 rounded-md hover:text-white hover:bg-backgroundHover">
+              <Image
+                src="/icons/3dcube.png"
+                alt="Open details link"
+                width="20"
+                height="20"
+                priority
+              />
+              Open details
             </li>
           </Link>
         </ul>

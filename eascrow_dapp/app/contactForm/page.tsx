@@ -59,7 +59,7 @@ export default function ContactForm() {
             </div>
             <div className="mb-8">
               <Label htmlFor="message" className="text-white text-sm">
-                You message
+                Your message
               </Label>
               <Textarea
                 placeholder="Please enter you message"

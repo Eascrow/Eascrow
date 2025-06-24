@@ -8,10 +8,9 @@ import { useFreighterWallet } from '@/app/hooks/useFreighterWallet';
 import TableComponent from '@/components/shared/TableComponent';
 
 const Transactions = () => {
-  const { publicKey } = useFreighterWallet();
-  const [isWalletConnected, setIsWalletConnected] = useState<boolean>(
-    !!publicKey
-  );
+  const { publicKey, transactions } = useFreighterWallet();
+  const [isWalletConnected, setIsWalletConnected] =
+    useState<boolean>(!!publicKey);
 
   // Track changes in `publicKey` and update `isWalletConnected`
   useEffect(() => {
@@ -54,7 +53,7 @@ const Transactions = () => {
             />
             <h3 className="text-2xl text-white font-bold">Transactions</h3>
           </div>
-          <TableComponent />
+          <TableComponent transactions={transactions} />
         </Card>
       </section>
     </div>

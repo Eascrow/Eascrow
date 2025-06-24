@@ -32,7 +32,7 @@ export default function CreateEscrow() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
+    setFormData(prevData => ({
       ...prevData,
       [name]: name === 'price' ? parseFloat(value) : value,
     }));
