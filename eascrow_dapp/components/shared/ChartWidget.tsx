@@ -23,6 +23,16 @@ const ChartWidget = () => {
       initial-currency="usd"
     />
   );
+
+  // Alternative approach using React.createElement (uncomment if you prefer this):
+  // return React.createElement('gecko-coin-price-chart-widget', {
+  //   locale: 'fr',
+  //   'dark-mode': 'true',
+  //   'transparent-background': 'true',
+  //   outlined: 'true',
+  //   'coin-id': 'stellar',
+  //   'initial-currency': 'usd',
+  // });
 };
 
 export default ChartWidget;
